@@ -1,0 +1,87 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "entity-resolution-engine"
+version = "0.1.0.dev0"
+description = "Auditable entity resolution for messy tabular data"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [
+  { name = "Jhonata França da Cruz" },
+]
+keywords = [
+  "data-quality",
+  "entity-resolution",
+  "fuzzy-matching",
+  "record-linkage",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Typing :: Typed",
+]
+dependencies = [
+  "duckdb>=1.3,<2",
+  "openpyxl>=3.1,<4",
+  "pandas>=2.2,<3",
+  "rapidfuzz>=3.10,<4",
+  "typer>=0.15,<1",
+]
+
+[project.scripts]
+entity-resolution-engine = "entity_resolution_engine.cli:app"
+
+[project.optional-dependencies]
+dev = [
+  "mypy>=1.15,<2",
+  "pandas-stubs>=2.2,<3",
+  "pytest>=8,<10",
+  "pytest-cov>=6,<8",
+  "ruff>=0.11,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/entity_resolution_engine"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["B", "C4", "E", "F", "I", "RUF", "SIM", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+addopts = [
+  "--strict-config",
+  "--strict-markers",
+  "--cov=entity_resolution_engine",
+  "--cov-branch",
+  "--cov-report=term-missing",
+  "--cov-fail-under=90",
+  "-ra",
+]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+omit = ["src/entity_resolution_engine/__main__.py"]
+
+[tool.coverage.report]
+exclude_also = [
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+]
+show_missing = true
