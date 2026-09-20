@@ -53,7 +53,12 @@ cd entity-resolution-engine
 uv sync --locked --extra dev
 uv run entity-resolution-engine doctor
 uv run entity-resolution-engine check-config examples/basic-job.toml
+uv run entity-resolution-engine inspect --config examples/basic-job.toml
 ```
+
+The `inspect` command executes the complete first milestone: it loads both configured sources,
+validates their schemas and record identifiers, and prints row counts, mapped fields, warnings, and
+validation status. It never prints record values, and it states explicitly that matching has not run.
 
 Run the complete quality gate:
 

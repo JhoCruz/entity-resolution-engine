@@ -1,14 +1,14 @@
 schema_version = 1
 
 [sources.left]
-path = "../data/synthetic/customers_a.csv"
+path = "data/customers_a.csv"
 file_type = "csv"
 record_id = "customer_id"
 delimiter = ","
 encoding = "utf-8"
 
 [sources.right]
-path = "../data/synthetic/customers_b.xlsx"
+path = "data/customers_b.xlsx"
 file_type = "xlsx"
 record_id = "row_id"
 worksheet = "Customers"
