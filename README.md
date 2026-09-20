@@ -39,8 +39,9 @@ flowchart LR
 ```
 
 The initial implementation includes the typed decision policy that separates automatic matches
-from records requiring human review, validated TOML contracts, and CSV/XLSX loaders that preserve
-source values and row provenance. Schema validation is the next milestone.
+from records requiring human review, validated TOML contracts, CSV/XLSX loaders that preserve
+source values and row provenance, and source validation that blocks missing columns or invalid
+record identifiers without exposing their values. Normalization is the next pipeline milestone.
 
 ## Quick start
 

@@ -23,7 +23,8 @@ entity_resolution_engine/
 ├── cli.py              # User-facing command orchestration
 ├── config.py           # Typed source, field mapping, and threshold contracts
 ├── decision.py         # Thresholds and abstention policy
-├── ingestion.py        # CSV/XLSX loading and source validation
+├── ingestion.py        # CSV/XLSX loading and row provenance
+├── validation.py       # Source schemas and record identifiers
 ├── normalization.py    # Field-specific canonicalization
 ├── blocking.py         # Candidate generation
 ├── scoring.py          # Pair-level evidence and confidence
@@ -37,6 +38,8 @@ Modules are added only when their milestone begins. Empty architecture is docume
 
 - Original values remain available in reports.
 - Loaded records retain their source path, worksheet, and logical row number.
+- Missing mapped columns and invalid record identifiers block downstream processing.
+- Independent validation failures are returned together without exposing identifier values.
 - Normalized values never overwrite source data.
 - A match stores the exact rules and component scores that produced it.
 - Thresholds are explicit configuration, never hidden constants.

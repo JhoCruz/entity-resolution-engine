@@ -38,6 +38,20 @@ to the loaded result for later audit reports.
 Missing files, directories, empty sources, decoding failures, malformed CSV files, corrupt
 workbooks, and missing worksheets produce errors that include the source path and relevant context.
 
+## Source validation behavior
+
+After loading, each source is checked against its configured record identifier and field mappings.
+Validation blocks downstream processing when:
+
+- the source has no data rows;
+- a required column is missing or a column name is duplicated;
+- a record identifier is null, blank, or duplicated.
+
+Independent problems from both sources are collected into one structured result when possible.
+Messages include the source path, affected columns, counts, and bounded samples of logical row
+numbers. They deliberately omit record identifier values. Unexpected columns are reported as
+non-blocking warnings and remain unchanged in the loaded data.
+
 ## Field mappings
 
 Every `[[field_mappings]]` entry gives one logical field a stable name and identifies its source
@@ -79,4 +93,5 @@ print(config.field_mappings)
 
 Loading the configuration validates the complete contract and always resolves relative paths from
 the TOML file's directory, regardless of the shell's current working directory. Source files are
-loaded separately by `entity_resolution_engine.ingestion.load_source` or `load_sources`.
+loaded separately by `entity_resolution_engine.ingestion.load_source` or `load_sources`, then
+checked by `entity_resolution_engine.validation.validate_source` or `validate_sources`.
