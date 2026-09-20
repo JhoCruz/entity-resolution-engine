@@ -21,6 +21,7 @@ modes visible. The first stable release targets local CSV/XLSX workflows through
 ```text
 entity_resolution_engine/
 ├── cli.py              # User-facing command orchestration
+├── config.py           # Typed source, field mapping, and threshold contracts
 ├── decision.py         # Thresholds and abstention policy
 ├── ingestion.py        # CSV/XLSX loading and source validation
 ├── normalization.py    # Field-specific canonicalization

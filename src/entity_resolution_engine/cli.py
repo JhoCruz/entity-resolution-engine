@@ -1,11 +1,13 @@
 """Command-line interface for the entity resolution engine."""
 
 import platform
+from pathlib import Path
 from typing import Annotated
 
 import typer
 
 from entity_resolution_engine import __version__
+from entity_resolution_engine.config import ConfigurationError, load_config
 from entity_resolution_engine.decision import DecisionPolicy
 
 app = typer.Typer(
@@ -41,3 +43,34 @@ def doctor() -> None:
         f"automatic match >= {policy.automatic_match_threshold:.2f}"
     )
     typer.echo("Environment ready.")
+
+
+@app.command("check-config")
+def check_config(
+    config_path: Annotated[
+        Path,
+        typer.Argument(help="Path to a TOML job configuration."),
+    ],
+) -> None:
+    """Load a job configuration and report its validated contract."""
+    try:
+        config = load_config(config_path)
+    except ConfigurationError as error:
+        typer.echo(f"Configuration error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+
+    typer.echo(f"Configuration valid: {config_path}")
+    typer.echo(
+        f"Left source: {config.left_source.file_type.value} "
+        f"(record_id={config.left_source.record_id})"
+    )
+    typer.echo(
+        f"Right source: {config.right_source.file_type.value} "
+        f"(record_id={config.right_source.record_id})"
+    )
+    typer.echo(f"Field mappings: {len(config.field_mappings)}")
+    typer.echo(
+        "Decision thresholds: "
+        f"review >= {config.decision_policy.review_threshold:.2f}; "
+        f"automatic match >= {config.decision_policy.automatic_match_threshold:.2f}"
+    )

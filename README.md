@@ -38,8 +38,9 @@ flowchart LR
     F --> I[No match]
 ```
 
-The initial implementation already includes the typed decision policy that separates automatic
-matches from records requiring human review. Ingestion and matching are the next milestones.
+The initial implementation includes the typed decision policy that separates automatic matches
+from records requiring human review, plus validated TOML contracts for sources and corresponding
+fields. File ingestion is the next milestone.
 
 ## Quick start
 
@@ -50,6 +51,7 @@ git clone https://github.com/JhoCruz/entity-resolution-engine.git
 cd entity-resolution-engine
 uv sync --locked --extra dev
 uv run entity-resolution-engine doctor
+uv run entity-resolution-engine check-config examples/basic-job.toml
 ```
 
 Run the complete quality gate:
@@ -84,6 +86,7 @@ entity-resolution-engine/
 ├── .github/                     # CI and contribution templates
 ├── data/                        # Synthetic-data policy and future generated samples
 ├── docs/                        # Architecture, decisions, and milestone plan
+├── examples/                    # Reproducible synthetic job configurations
 ├── src/entity_resolution_engine/
 ├── tests/
 ├── Dockerfile
@@ -100,6 +103,8 @@ entity-resolution-engine/
 6. Benchmark runtime and memory, then publish a stable CLI workflow.
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for acceptance criteria and explicit non-goals.
+The configuration format is documented in
+[`docs/CONFIGURATION.md`](docs/CONFIGURATION.md).
 
 ## Data and privacy
 
