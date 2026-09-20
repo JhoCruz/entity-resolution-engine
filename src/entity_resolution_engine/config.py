@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import codecs
 import math
 import re
 import tomllib
@@ -59,6 +60,8 @@ class SourceConfig:
     file_type: FileType
     record_id: str
     worksheet: str | None = None
+    delimiter: str = ","
+    encoding: str = "utf-8"
 
     def __post_init__(self) -> None:
         _validate_exact_text(self.record_id, "record_id")
@@ -72,6 +75,15 @@ class SourceConfig:
             _validate_exact_text(self.worksheet, "worksheet")
             if self.file_type is not FileType.XLSX:
                 raise ConfigurationError("worksheet can only be set for an xlsx source.")
+        if len(self.delimiter) != 1 or self.delimiter in {"\r", "\n"}:
+            raise ConfigurationError("delimiter must be exactly one non-newline character.")
+        _validate_exact_text(self.encoding, "encoding")
+        try:
+            codecs.lookup(self.encoding)
+        except LookupError as error:
+            raise ConfigurationError(f"Unknown text encoding '{self.encoding}'.") from error
+        if self.file_type is FileType.XLSX and (self.delimiter != "," or self.encoding != "utf-8"):
+            raise ConfigurationError("delimiter and encoding can only be customized for csv.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -223,16 +235,24 @@ def _resolve_source_path(raw_path: str, config_directory: Path) -> Path:
 def _parse_source(table: Table, location: str, config_directory: Path) -> SourceConfig:
     _reject_unknown_keys(
         table,
-        {"path", "file_type", "record_id", "worksheet"},
+        {"path", "file_type", "record_id", "worksheet", "delimiter", "encoding"},
         location,
     )
     file_type = _required_enum(table, "file_type", location, FileType)
+    csv_only_options = {"delimiter", "encoding"}.intersection(table)
+    if file_type is FileType.XLSX and csv_only_options:
+        rendered = ", ".join(sorted(csv_only_options))
+        raise ConfigurationError(
+            f"Invalid {location}: {rendered} can only be set for a csv source."
+        )
     try:
         return SourceConfig(
             path=_resolve_source_path(_required_string(table, "path", location), config_directory),
             file_type=file_type,
             record_id=_required_string(table, "record_id", location),
             worksheet=_optional_string(table, "worksheet", location),
+            delimiter=_optional_string(table, "delimiter", location) or ",",
+            encoding=_optional_string(table, "encoding", location) or "utf-8",
         )
     except ConfigurationError as error:
         raise ConfigurationError(f"Invalid {location}: {error}") from error

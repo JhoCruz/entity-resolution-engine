@@ -36,6 +36,7 @@ Modules are added only when their milestone begins. Empty architecture is docume
 ## Data flow guarantees
 
 - Original values remain available in reports.
+- Loaded records retain their source path, worksheet, and logical row number.
 - Normalized values never overwrite source data.
 - A match stores the exact rules and component scores that produced it.
 - Thresholds are explicit configuration, never hidden constants.

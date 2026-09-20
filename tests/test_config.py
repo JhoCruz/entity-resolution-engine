@@ -23,6 +23,8 @@ schema_version = 1
 path = "inputs/customers.csv"
 file_type = "csv"
 record_id = "customer_id"
+delimiter = ";"
+encoding = "latin-1"
 
 [sources.right]
 path = "inputs/registry.xlsx"
@@ -124,6 +126,8 @@ def test_load_config_returns_deterministic_typed_contracts(tmp_path: Path) -> No
         path=(tmp_path / "inputs/customers.csv").resolve(),
         file_type=FileType.CSV,
         record_id="customer_id",
+        delimiter=";",
+        encoding="latin-1",
     )
     assert first.right_source.worksheet == "Customers"
     assert first.field_mappings[0] == FieldMapping(
@@ -163,6 +167,47 @@ def test_source_rejects_worksheet_for_csv() -> None:
             file_type=FileType.CSV,
             record_id="row_id",
             worksheet="Sheet 1",
+        )
+
+
+@pytest.mark.parametrize("delimiter", ["", "||", "\n"])
+def test_source_rejects_invalid_csv_delimiter(delimiter: str) -> None:
+    with pytest.raises(ConfigurationError, match="delimiter"):
+        SourceConfig(
+            path=Path("customers.csv"),
+            file_type=FileType.CSV,
+            record_id="row_id",
+            delimiter=delimiter,
+        )
+
+
+def test_source_rejects_unknown_text_encoding() -> None:
+    with pytest.raises(ConfigurationError, match="Unknown text encoding"):
+        SourceConfig(
+            path=Path("customers.csv"),
+            file_type=FileType.CSV,
+            record_id="row_id",
+            encoding="not-a-real-encoding",
+        )
+
+
+def test_config_rejects_csv_options_for_xlsx(tmp_path: Path) -> None:
+    config = VALID_CONFIG.replace(
+        'worksheet = "Customers"',
+        'worksheet = "Customers"\ndelimiter = ";"',
+    )
+
+    with pytest.raises(ConfigurationError, match="can only be set for a csv"):
+        load_config(_write_config(tmp_path, config))
+
+
+def test_xlsx_source_rejects_custom_csv_options() -> None:
+    with pytest.raises(ConfigurationError, match="only be customized for csv"):
+        SourceConfig(
+            path=Path("customers.xlsx"),
+            file_type=FileType.XLSX,
+            record_id="row_id",
+            delimiter=";",
         )
 
 

@@ -22,9 +22,21 @@ Each job has a `left` and `right` source.
 | `file_type` | Explicit `csv` or `xlsx` format. |
 | `record_id` | Column that uniquely identifies a row inside that source. |
 | `worksheet` | Optional worksheet name, accepted only for XLSX sources. |
+| `delimiter` | Optional one-character CSV separator; defaults to `,`. |
+| `encoding` | Optional CSV text encoding; defaults to `utf-8`. |
 
 The configured extension must agree with `file_type`. File existence and source columns are
-checked by the ingestion layer in the next milestone.
+checked by the ingestion layer. CSV options are rejected on XLSX sources.
+
+## Ingestion behavior
+
+CSV and XLSX files are loaded into pandas data frames without trimming, normalizing, or replacing
+cell values. Each loaded source also retains logical row numbers, starting at row 2 because row 1
+contains the header. The selected Excel worksheet and original source configuration remain attached
+to the loaded result for later audit reports.
+
+Missing files, directories, empty sources, decoding failures, malformed CSV files, corrupt
+workbooks, and missing worksheets produce errors that include the source path and relevant context.
 
 ## Field mappings
 
@@ -65,5 +77,6 @@ config = load_config("examples/basic-job.toml")
 print(config.field_mappings)
 ```
 
-Loading validates the complete contract and always resolves relative paths from the TOML file's
-directory, regardless of the shell's current working directory.
+Loading the configuration validates the complete contract and always resolves relative paths from
+the TOML file's directory, regardless of the shell's current working directory. Source files are
+loaded separately by `entity_resolution_engine.ingestion.load_source` or `load_sources`.

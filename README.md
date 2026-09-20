@@ -39,8 +39,8 @@ flowchart LR
 ```
 
 The initial implementation includes the typed decision policy that separates automatic matches
-from records requiring human review, plus validated TOML contracts for sources and corresponding
-fields. File ingestion is the next milestone.
+from records requiring human review, validated TOML contracts, and CSV/XLSX loaders that preserve
+source values and row provenance. Schema validation is the next milestone.
 
 ## Quick start
 
