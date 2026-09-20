@@ -1,0 +1,218 @@
+"""Tests for CSV and XLSX source ingestion."""
+
+from pathlib import Path
+
+import pandas as pd
+import pytest
+
+from entity_resolution_engine.config import (
+    EngineConfig,
+    FieldMapping,
+    FileType,
+    SemanticFieldType,
+    SourceConfig,
+)
+from entity_resolution_engine.decision import DecisionPolicy
+from entity_resolution_engine.ingestion import IngestionError, load_source, load_sources
+
+
+def _source(
+    path: Path,
+    file_type: FileType = FileType.CSV,
+    *,
+    worksheet: str | None = None,
+    delimiter: str = ",",
+    encoding: str = "utf-8",
+) -> SourceConfig:
+    return SourceConfig(
+        path=path,
+        file_type=file_type,
+        record_id="row_id",
+        worksheet=worksheet,
+        delimiter=delimiter,
+        encoding=encoding,
+    )
+
+
+def _write_xlsx(path: Path) -> None:
+    ignored = pd.DataFrame({"row_id": ["ignored"], "full_name": ["Other sheet"]})
+    customers = pd.DataFrame(
+        {
+            "row_id": ["B-001", "B-002"],
+            "full_name": [" João da Silva ", "Érica Souza"],
+            "code": ["00123", "00007"],
+            "note": ["N/A", ""],
+        },
+        dtype=object,
+    )
+    with pd.ExcelWriter(path, engine="openpyxl") as writer:
+        ignored.to_excel(writer, sheet_name="Ignored", index=False)
+        customers.to_excel(writer, sheet_name="Customers", index=False)
+
+
+def test_load_csv_preserves_values_and_logical_row_numbers(tmp_path: Path) -> None:
+    path = tmp_path / "customers.csv"
+    content = "\n".join(
+        [
+            "row_id;full_name;code;note",
+            "A-001; João da Silva ;00123;N/A",
+            "A-002;Érica Souza;00007;",
+            "",
+        ]
+    )
+    path.write_bytes(content.encode("latin-1"))
+
+    loaded = load_source(_source(path, delimiter=";", encoding="latin-1"))
+
+    assert loaded.row_count == 2
+    assert loaded.source_rows == (2, 3)
+    assert loaded.worksheet is None
+    assert loaded.data.to_dict(orient="records") == [
+        {
+            "row_id": "A-001",
+            "full_name": " João da Silva ",
+            "code": "00123",
+            "note": "N/A",
+        },
+        {
+            "row_id": "A-002",
+            "full_name": "Érica Souza",
+            "code": "00007",
+            "note": "",
+        },
+    ]
+
+
+def test_load_xlsx_selects_worksheet_and_preserves_values(tmp_path: Path) -> None:
+    path = tmp_path / "customers.xlsx"
+    _write_xlsx(path)
+
+    loaded = load_source(_source(path, FileType.XLSX, worksheet="Customers"))
+
+    assert loaded.row_count == 2
+    assert loaded.source_rows == (2, 3)
+    assert loaded.worksheet == "Customers"
+    assert loaded.data.to_dict(orient="records") == [
+        {
+            "row_id": "B-001",
+            "full_name": " João da Silva ",
+            "code": "00123",
+            "note": "N/A",
+        },
+        {
+            "row_id": "B-002",
+            "full_name": "Érica Souza",
+            "code": "00007",
+            "note": "",
+        },
+    ]
+
+
+def test_load_xlsx_uses_first_worksheet_by_default(tmp_path: Path) -> None:
+    path = tmp_path / "customers.xlsx"
+    _write_xlsx(path)
+
+    loaded = load_source(_source(path, FileType.XLSX))
+
+    assert loaded.worksheet == "Ignored"
+    assert loaded.data.loc[0, "row_id"] == "ignored"
+
+
+def test_load_sources_loads_both_sides_of_engine_config(tmp_path: Path) -> None:
+    left_path = tmp_path / "left.csv"
+    left_path.write_text("row_id,name\nL-1,Ana\n", encoding="utf-8")
+    right_path = tmp_path / "right.xlsx"
+    pd.DataFrame({"row_id": ["R-1"], "customer_name": ["Ana"]}).to_excel(
+        right_path,
+        index=False,
+        engine="openpyxl",
+    )
+    config = EngineConfig(
+        left_source=_source(left_path),
+        right_source=_source(right_path, FileType.XLSX),
+        field_mappings=(
+            FieldMapping(
+                name="full_name",
+                left_column="name",
+                right_column="customer_name",
+                semantic_type=SemanticFieldType.PERSON_NAME,
+            ),
+        ),
+        decision_policy=DecisionPolicy(),
+    )
+
+    left, right = load_sources(config)
+
+    assert left.data.loc[0, "name"] == "Ana"
+    assert right.data.loc[0, "customer_name"] == "Ana"
+
+
+def test_load_source_rejects_missing_file(tmp_path: Path) -> None:
+    path = tmp_path / "missing.csv"
+
+    with pytest.raises(IngestionError, match=r"missing\.csv.*does not exist"):
+        load_source(_source(path))
+
+
+def test_load_source_rejects_directory_path(tmp_path: Path) -> None:
+    path = tmp_path / "directory.csv"
+    path.mkdir()
+
+    with pytest.raises(IngestionError, match=r"directory\.csv.*not a regular file"):
+        load_source(_source(path))
+
+
+def test_load_source_rejects_zero_byte_file(tmp_path: Path) -> None:
+    path = tmp_path / "empty.csv"
+    path.touch()
+
+    with pytest.raises(IngestionError, match=r"empty\.csv.*file is empty"):
+        load_source(_source(path))
+
+
+def test_load_source_rejects_whitespace_only_csv(tmp_path: Path) -> None:
+    path = tmp_path / "blank.csv"
+    path.write_text("\n\n", encoding="utf-8")
+
+    with pytest.raises(IngestionError, match=r"blank\.csv.*no columns or rows"):
+        load_source(_source(path))
+
+
+def test_load_source_rejects_header_only_csv(tmp_path: Path) -> None:
+    path = tmp_path / "header-only.csv"
+    path.write_text("row_id,name\n", encoding="utf-8")
+
+    with pytest.raises(IngestionError, match=r"header-only\.csv.*no data rows"):
+        load_source(_source(path))
+
+
+def test_load_source_reports_csv_encoding_error(tmp_path: Path) -> None:
+    path = tmp_path / "encoded.csv"
+    path.write_bytes(b"row_id,name\nA-1,\xff\n")
+
+    with pytest.raises(IngestionError, match=r"encoded\.csv.*encoding 'utf-8'"):
+        load_source(_source(path))
+
+
+def test_load_source_reports_malformed_csv(tmp_path: Path) -> None:
+    path = tmp_path / "malformed.csv"
+    path.write_text('row_id,name\nA-1,"unfinished\n', encoding="utf-8")
+
+    with pytest.raises(IngestionError, match=r"malformed\.csv.*malformed"):
+        load_source(_source(path))
+
+
+def test_load_source_reports_missing_worksheet(tmp_path: Path) -> None:
+    path = tmp_path / "customers.xlsx"
+    _write_xlsx(path)
+
+    with pytest.raises(IngestionError, match=r"customers\.xlsx.*worksheet 'Missing'.*Customers"):
+        load_source(_source(path, FileType.XLSX, worksheet="Missing"))
+
+
+def test_load_source_reports_corrupt_xlsx(tmp_path: Path) -> None:
+    path = tmp_path / "corrupt.xlsx"
+    path.write_text("not an Excel workbook", encoding="utf-8")
+
+    with pytest.raises(IngestionError, match=r"corrupt\.xlsx.*could not be read"):
+        load_source(_source(path, FileType.XLSX))

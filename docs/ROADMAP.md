@@ -15,7 +15,7 @@ acceptance criteria pass locally and in CI.
 ## Milestone 1: Data contracts and ingestion
 
 - [x] Define source and field mapping configuration.
-- [ ] Read CSV and XLSX without mutating original values.
+- [x] Read CSV and XLSX without mutating original values.
 - [ ] Validate required columns, record identifiers, empty inputs, and duplicate identifiers.
 - [ ] Produce actionable errors containing file and column context.
 - [ ] Cover successful and failing paths with synthetic fixtures.

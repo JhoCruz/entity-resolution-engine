@@ -4,6 +4,8 @@ schema_version = 1
 path = "../data/synthetic/customers_a.csv"
 file_type = "csv"
 record_id = "customer_id"
+delimiter = ","
+encoding = "utf-8"
 
 [sources.right]
 path = "../data/synthetic/customers_b.xlsx"
