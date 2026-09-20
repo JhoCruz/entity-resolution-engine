@@ -16,9 +16,9 @@ acceptance criteria pass locally and in CI.
 
 - [x] Define source and field mapping configuration.
 - [x] Read CSV and XLSX without mutating original values.
-- [ ] Validate required columns, record identifiers, empty inputs, and duplicate identifiers.
-- [ ] Produce actionable errors containing file and column context.
-- [ ] Cover successful and failing paths with synthetic fixtures.
+- [x] Validate required columns, record identifiers, empty inputs, and duplicate identifiers.
+- [x] Produce actionable errors containing file and column context.
+- [x] Cover successful and failing paths with synthetic fixtures.
 
 ## Milestone 2: Normalization
 
