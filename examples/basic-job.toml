@@ -1,0 +1,37 @@
+schema_version = 1
+
+[sources.left]
+path = "../data/synthetic/customers_a.csv"
+file_type = "csv"
+record_id = "customer_id"
+
+[sources.right]
+path = "../data/synthetic/customers_b.xlsx"
+file_type = "xlsx"
+record_id = "row_id"
+worksheet = "Customers"
+
+[[field_mappings]]
+name = "full_name"
+left_column = "name"
+right_column = "customer_name"
+semantic_type = "person_name"
+weight = 0.45
+
+[[field_mappings]]
+name = "tax_id"
+left_column = "tax_identifier"
+right_column = "document"
+semantic_type = "identifier"
+weight = 0.35
+
+[[field_mappings]]
+name = "birth_date"
+left_column = "date_of_birth"
+right_column = "birth_date"
+semantic_type = "date"
+weight = 0.20
+
+[thresholds]
+automatic_match = 0.90
+review = 0.70
