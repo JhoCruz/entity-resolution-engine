@@ -41,6 +41,7 @@ Modules are added only when their milestone begins. Empty architecture is docume
 - Missing mapped columns and invalid record identifiers block downstream processing.
 - Independent validation failures are returned together without exposing identifier values.
 - Normalized values never overwrite source data.
+- Every changed comparison value retains ordered normalization-step metadata.
 - A match stores the exact rules and component scores that produced it.
 - Thresholds are explicit configuration, never hidden constants.
 - Ambiguous cases remain reviewable rather than silently forced into a binary decision.

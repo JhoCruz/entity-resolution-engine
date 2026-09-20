@@ -41,7 +41,8 @@ flowchart LR
 The initial implementation includes the typed decision policy that separates automatic matches
 from records requiring human review, validated TOML contracts, CSV/XLSX loaders that preserve
 source values and row provenance, and source validation that blocks missing columns or invalid
-record identifiers without exposing their values. Normalization is the next pipeline milestone.
+record identifiers without exposing their values. The normalization stage now retains original,
+canonical, and transformation metadata side by side; field-specific canonicalization is next.
 
 ## Quick start
 
@@ -111,6 +112,8 @@ entity-resolution-engine/
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for acceptance criteria and explicit non-goals.
 The configuration format is documented in
 [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md).
+The baseline transformation contract is documented in
+[`docs/NORMALIZATION.md`](docs/NORMALIZATION.md).
 
 ## Data and privacy
 
