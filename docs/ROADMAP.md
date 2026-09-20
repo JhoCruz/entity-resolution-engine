@@ -23,10 +23,10 @@ acceptance criteria pass locally and in CI.
 
 ## Milestone 2: Normalization
 
-- [ ] Normalize Unicode, whitespace, punctuation, and casing safely.
+- [x] Normalize Unicode, whitespace, punctuation, and casing safely.
 - [ ] Add field-specific normalization for names, identifiers, phone numbers, dates, and e-mails.
-- [ ] Preserve original and normalized values side by side.
-- [ ] Document every lossy transformation and test its edge cases.
+- [x] Preserve original and normalized values side by side.
+- [x] Document every lossy transformation and test its edge cases.
 
 ## Milestone 3: Deterministic baseline
 
