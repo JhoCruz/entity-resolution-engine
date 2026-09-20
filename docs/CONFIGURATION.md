@@ -12,6 +12,12 @@ Validate it from the command line:
 uv run entity-resolution-engine check-config examples/basic-job.toml
 ```
 
+Load and validate both example sources without printing their record values:
+
+```bash
+uv run entity-resolution-engine inspect --config examples/basic-job.toml
+```
+
 ## Sources
 
 Each job has a `left` and `right` source.

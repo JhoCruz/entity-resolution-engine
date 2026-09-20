@@ -15,3 +15,10 @@ Never add:
 
 Large generated datasets and local outputs are ignored by Git. Small deterministic fixtures used
 by automated tests may be committed under `tests/fixtures/` when they contain no real PII.
+
+The documented CLI example uses the small files under `examples/data/`. They contain invented
+entities generated with seed `20260920`. Regenerate them with:
+
+```bash
+uv run python scripts/generate_example_data.py
+```

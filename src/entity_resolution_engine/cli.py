@@ -9,6 +9,12 @@ import typer
 from entity_resolution_engine import __version__
 from entity_resolution_engine.config import ConfigurationError, load_config
 from entity_resolution_engine.decision import DecisionPolicy
+from entity_resolution_engine.ingestion import IngestionError, load_sources
+from entity_resolution_engine.validation import (
+    SourceValidationError,
+    ValidatedSource,
+    validate_sources,
+)
 
 app = typer.Typer(
     add_completion=False,
@@ -74,3 +80,49 @@ def check_config(
         f"review >= {config.decision_policy.review_threshold:.2f}; "
         f"automatic match >= {config.decision_policy.automatic_match_threshold:.2f}"
     )
+
+
+def _report_source(label: str, source: ValidatedSource, mapped_field_count: int) -> None:
+    loaded = source.loaded_source
+    details = [
+        f"type={loaded.source.file_type.value}",
+        f"rows={loaded.row_count}",
+        f"record_id={loaded.source.record_id}",
+        f"mapped_fields={mapped_field_count}",
+        f"warnings={len(source.warnings)}",
+    ]
+    if loaded.worksheet is not None:
+        details.insert(1, f"worksheet={loaded.worksheet}")
+    typer.echo(f"{label} source: valid | {' | '.join(details)}")
+
+
+@app.command("inspect")
+def inspect_job(
+    config_path: Annotated[
+        Path,
+        typer.Option("--config", "-c", help="Path to a TOML job configuration."),
+    ],
+) -> None:
+    """Load and validate both sources, then print a value-free structural summary."""
+    try:
+        config = load_config(config_path)
+        left, right = load_sources(config)
+        validated_left, validated_right = validate_sources(config, left, right)
+    except ConfigurationError as error:
+        typer.echo(f"Configuration error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    except IngestionError as error:
+        typer.echo(f"Ingestion error: {error}", err=True)
+        raise typer.Exit(code=3) from error
+    except SourceValidationError as error:
+        typer.echo(f"Validation error: {error}", err=True)
+        raise typer.Exit(code=4) from error
+
+    mapped_names = ", ".join(mapping.name for mapping in config.field_mappings)
+    mapped_field_count = len(config.field_mappings)
+    typer.echo(f"Inspection complete: {config_path}")
+    typer.echo(f"Mapped fields ({mapped_field_count}): {mapped_names}")
+    _report_source("Left", validated_left, mapped_field_count)
+    _report_source("Right", validated_right, mapped_field_count)
+    typer.echo("Validation status: valid")
+    typer.echo("Matching status: not run")

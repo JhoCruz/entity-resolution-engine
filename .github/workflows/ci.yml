@@ -43,6 +43,9 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
+      - name: Exercise documented ingestion command
+        run: uv run entity-resolution-engine inspect --config examples/basic-job.toml
+
   package:
     name: Package and container
     runs-on: ubuntu-latest
