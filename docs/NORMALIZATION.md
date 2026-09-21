@@ -29,8 +29,29 @@ transformations. Composite cell values such as lists or dictionaries are rejecte
 silently stringified. Running the baseline again on its own output produces the same comparison
 value.
 
+## Semantic extensions
+
+Semantic normalizers run after the baseline. They reuse its scalar validation, null handling, and
+audit trail, then append a semantic transformation only when it changes the comparison value.
+
+| Semantic type | Added step | Behavior | Information loss |
+| --- | --- | --- | --- |
+| `person_name` | `diacritics_removed` | Decompose Unicode characters, remove combining marks, and recompose the result. | Accent and other combining-mark distinctions are removed. |
+| `identifier` | `non_alphanumeric_removed` | Retain only Unicode letters and digits. | Separators, whitespace, punctuation, and symbols are removed. |
+
+Person-name normalization keeps particles and token order. It does not expand nicknames, reorder
+names, apply phonetic rules, or transliterate distinct letters such as `ø` into `o`. Those choices
+can merge different people and belong in later, measured comparison logic rather than silent
+normalization.
+
+Identifier normalization is deliberately generic. It preserves leading zeros and Unicode letters
+and digits, but does not guess an identifier type, validate a checksum, or infer a country. A value
+containing only formatting becomes an empty string, not a missing value, so later validation or
+matching logic can distinguish the two states.
+
 ## Deliberate limits
 
-The baseline preserves diacritics and does not interpret identifiers, dates, phone numbers, or
-e-mail addresses. Their semantic normalizers belong to later Milestone 2 increments. Matching and
-scoring must not infer meaning from this baseline alone.
+The baseline itself preserves diacritics. Only `person_name` and `identifier` currently add
+field-specific behavior. Dates, phone numbers, and e-mail addresses still use the baseline and will
+receive dedicated, conservative rules in later Milestone 2 increments. Matching and scoring must
+not infer meaning from the baseline alone.
