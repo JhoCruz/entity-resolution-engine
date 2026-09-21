@@ -24,7 +24,12 @@ acceptance criteria pass locally and in CI.
 ## Milestone 2: Normalization
 
 - [x] Normalize Unicode, whitespace, punctuation, and casing safely.
-- [ ] Add field-specific normalization for names, identifiers, phone numbers, dates, and e-mails.
+- [ ] Add field-specific normalization:
+  - [x] Person names with diacritic-insensitive keys that preserve particles and token order.
+  - [x] Generic identifiers that remove formatting without losing leading zeros.
+  - [ ] Phone numbers with explicit country-code and extension rules.
+  - [ ] Dates with explicit formats and no ambiguous day/month guessing.
+  - [ ] E-mail addresses with standards-aware local-part and domain handling.
 - [x] Preserve original and normalized values side by side.
 - [x] Document every lossy transformation and test its edge cases.
 

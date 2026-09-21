@@ -1,5 +1,6 @@
 """Tests for auditable baseline normalization."""
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
@@ -19,6 +20,10 @@ from entity_resolution_engine.normalization import (
     SOURCE_RECORD_ID_COLUMN,
     SOURCE_ROW_COLUMN,
     NormalizationStep,
+    NormalizedValue,
+    normalize_identifier,
+    normalize_person_name,
+    normalize_semantic_value,
     normalize_sources,
     normalize_text,
 )
@@ -105,6 +110,126 @@ def test_normalize_text_is_idempotent(original: object) -> None:
     assert second.transformations == ()
 
 
+@pytest.mark.parametrize(
+    ("original", "expected", "steps"),
+    [
+        (
+            "  João D'Ávila-Souza  ",
+            "joao d avila souza",
+            (
+                NormalizationStep.CASE_FOLD,
+                NormalizationStep.PUNCTUATION_TO_SPACE,
+                NormalizationStep.WHITESPACE_COLLAPSE,
+                NormalizationStep.DIACRITICS_REMOVED,
+            ),
+        ),
+        (
+            "Jose\u0301",
+            "jose",
+            (
+                NormalizationStep.UNICODE_NFKC,
+                NormalizationStep.CASE_FOLD,
+                NormalizationStep.DIACRITICS_REMOVED,
+            ),
+        ),
+        ("ana maria", "ana maria", ()),
+        (None, None, ()),
+    ],
+)
+def test_normalize_person_name_removes_diacritics_after_baseline(
+    original: object,
+    expected: str | None,
+    steps: tuple[NormalizationStep, ...],
+) -> None:
+    result = normalize_person_name(original)
+
+    assert result.original is original
+    assert result.normalized == expected
+    assert result.transformations == steps
+
+
+@pytest.mark.parametrize(
+    ("original", "expected", "steps"),
+    [
+        (
+            "  SYN-000.123/AB  ",
+            "syn000123ab",
+            (
+                NormalizationStep.CASE_FOLD,
+                NormalizationStep.PUNCTUATION_TO_SPACE,
+                NormalizationStep.WHITESPACE_COLLAPSE,
+                NormalizationStep.NON_ALPHANUMERIC_REMOVED,
+            ),
+        ),
+        ("000123", "000123", ()),
+        (123, "123", (NormalizationStep.COERCE_TO_TEXT,)),
+        (
+            "A+B C",
+            "abc",
+            (
+                NormalizationStep.CASE_FOLD,
+                NormalizationStep.NON_ALPHANUMERIC_REMOVED,
+            ),
+        ),
+        (
+            "---",
+            "",
+            (
+                NormalizationStep.PUNCTUATION_TO_SPACE,
+                NormalizationStep.WHITESPACE_COLLAPSE,
+            ),
+        ),
+        (None, None, ()),
+    ],
+)
+def test_normalize_identifier_removes_formatting_and_preserves_leading_zeros(
+    original: object,
+    expected: str | None,
+    steps: tuple[NormalizationStep, ...],
+) -> None:
+    result = normalize_identifier(original)
+
+    assert result.original is original
+    assert result.normalized == expected
+    assert result.transformations == steps
+
+
+@pytest.mark.parametrize(
+    ("normalizer", "original"),
+    [
+        (normalize_person_name, "  João D'Ávila-Souza  "),
+        (normalize_identifier, "  SYN-000.123/AB  "),
+    ],
+)
+def test_semantic_normalizers_are_idempotent(
+    normalizer: Callable[[object], NormalizedValue],
+    original: object,
+) -> None:
+    first = normalizer(original)
+    second = normalizer(first.normalized)
+
+    assert second.normalized == first.normalized
+    assert second.transformations == ()
+
+
+@pytest.mark.parametrize(
+    "semantic_type",
+    [
+        SemanticFieldType.TEXT,
+        SemanticFieldType.DATE,
+        SemanticFieldType.EMAIL,
+        SemanticFieldType.PHONE,
+    ],
+)
+def test_unimplemented_semantic_types_use_the_baseline(
+    semantic_type: SemanticFieldType,
+) -> None:
+    result = normalize_semantic_value("Á+B", semantic_type)
+
+    assert result.normalized == "á+b"
+    assert result.transformations == (NormalizationStep.CASE_FOLD,)
+
+
 def _source(path: Path, record_id: str) -> SourceConfig:
     return SourceConfig(path=path, file_type=FileType.CSV, record_id=record_id)
 
@@ -144,15 +269,15 @@ def test_normalize_sources_preserves_originals_and_provenance(tmp_path: Path) ->
     left_data = pd.DataFrame(
         {
             "left_id": ["L-001", "L-002"],
-            "name": ["  ANA—SOUZA ", "Bruno Martins"],
-            "tax_identifier": ["SYN-001", "SYN-002"],
+            "name": ["  ÁNA—SOUZA ", "Bruno Martins"],
+            "tax_identifier": ["SYN-001", "000-002"],
         }
     )
     right_data = pd.DataFrame(
         {
             "right_id": ["R-001", "R-002"],
             "customer_name": ["ana souza", "BRUNO MARTINS"],
-            "document": ["SYN001", "SYN002"],
+            "document": ["SYN001", "000002"],
         }
     )
     left_before = left_data.copy(deep=True)
@@ -185,7 +310,7 @@ def test_normalize_sources_preserves_originals_and_provenance(tmp_path: Path) ->
     assert normalized_left.data[SOURCE_RECORD_ID_COLUMN].tolist() == ["L-001", "L-002"]
     assert normalized_left.data[SOURCE_ROW_COLUMN].tolist() == [2, 3]
     assert normalized_left.data["full_name_original"].tolist() == [
-        "  ANA—SOUZA ",
+        "  ÁNA—SOUZA ",
         "Bruno Martins",
     ]
     assert normalized_left.data["full_name_normalized"].tolist() == [
@@ -196,10 +321,18 @@ def test_normalize_sources_preserves_originals_and_provenance(tmp_path: Path) ->
         "ana souza",
         "bruno martins",
     ]
+    assert normalized_left.data["tax_id_normalized"].tolist() == ["syn001", "000002"]
+    assert normalized_right.data["tax_id_normalized"].tolist() == ["syn001", "000002"]
     assert normalized_left.data.loc[0, "full_name_transformations"] == (
         "case_fold",
         "punctuation_to_space",
         "whitespace_collapse",
+        "diacritics_removed",
+    )
+    assert normalized_left.data.loc[0, "tax_id_transformations"] == (
+        "case_fold",
+        "punctuation_to_space",
+        "non_alphanumeric_removed",
     )
     assert [field.name for field in normalized_left.fields] == ["full_name", "tax_id"]
     assert normalized_left.fields[0].semantic_type is SemanticFieldType.PERSON_NAME

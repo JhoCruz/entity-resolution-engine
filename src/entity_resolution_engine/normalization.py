@@ -24,6 +24,8 @@ class NormalizationStep(StrEnum):
     CASE_FOLD = "case_fold"
     PUNCTUATION_TO_SPACE = "punctuation_to_space"
     WHITESPACE_COLLAPSE = "whitespace_collapse"
+    DIACRITICS_REMOVED = "diacritics_removed"
+    NON_ALPHANUMERIC_REMOVED = "non_alphanumeric_removed"
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,6 +114,64 @@ def normalize_text(value: object) -> NormalizedValue:
     )
 
 
+def _record_semantic_transformation(
+    value: NormalizedValue,
+    normalized: str,
+    step: NormalizationStep,
+) -> NormalizedValue:
+    if normalized == value.normalized:
+        return value
+    return NormalizedValue(
+        original=value.original,
+        normalized=normalized,
+        transformations=(*value.transformations, step),
+    )
+
+
+def normalize_person_name(value: object) -> NormalizedValue:
+    """Create a diacritic-insensitive name key without changing token order."""
+    baseline = normalize_text(value)
+    if baseline.normalized is None:
+        return baseline
+
+    decomposed = unicodedata.normalize("NFD", baseline.normalized)
+    without_diacritics = "".join(
+        character for character in decomposed if not unicodedata.category(character).startswith("M")
+    )
+    normalized = unicodedata.normalize("NFC", without_diacritics)
+    return _record_semantic_transformation(
+        baseline,
+        normalized,
+        NormalizationStep.DIACRITICS_REMOVED,
+    )
+
+
+def normalize_identifier(value: object) -> NormalizedValue:
+    """Create a generic identifier key containing only Unicode letters and digits."""
+    baseline = normalize_text(value)
+    if baseline.normalized is None:
+        return baseline
+
+    normalized = "".join(character for character in baseline.normalized if character.isalnum())
+    return _record_semantic_transformation(
+        baseline,
+        normalized,
+        NormalizationStep.NON_ALPHANUMERIC_REMOVED,
+    )
+
+
+def normalize_semantic_value(
+    value: object,
+    semantic_type: SemanticFieldType,
+) -> NormalizedValue:
+    """Dispatch to a semantic normalizer while retaining the baseline as the safe fallback."""
+    if semantic_type is SemanticFieldType.PERSON_NAME:
+        return normalize_person_name(value)
+    if semantic_type is SemanticFieldType.IDENTIFIER:
+        return normalize_identifier(value)
+    return normalize_text(value)
+
+
 def _field_metadata(
     name: str,
     source_column: str,
@@ -144,7 +204,8 @@ def _normalize_source(
 
     for field in fields:
         results = tuple(
-            normalize_text(value) for value in loaded.data[field.source_column].tolist()
+            normalize_semantic_value(value, field.semantic_type)
+            for value in loaded.data[field.source_column].tolist()
         )
         normalized_data[field.original_column] = pd.Series(
             [result.original for result in results],
@@ -193,6 +254,9 @@ __all__ = [
     "NormalizedField",
     "NormalizedSource",
     "NormalizedValue",
+    "normalize_identifier",
+    "normalize_person_name",
+    "normalize_semantic_value",
     "normalize_sources",
     "normalize_text",
 ]
