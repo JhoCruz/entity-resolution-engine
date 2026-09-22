@@ -14,6 +14,7 @@ from entity_resolution_engine.config import (
 )
 from entity_resolution_engine.decision import DecisionPolicy
 from entity_resolution_engine.ingestion import IngestionError, load_source, load_sources
+from entity_resolution_engine.validation import ValidationCode, inspect_source
 
 
 def _source(
@@ -116,6 +117,42 @@ def test_load_xlsx_uses_first_worksheet_by_default(tmp_path: Path) -> None:
 
     assert loaded.worksheet == "Ignored"
     assert loaded.data.loc[0, "row_id"] == "ignored"
+
+
+@pytest.mark.parametrize("file_type", [FileType.CSV, FileType.XLSX])
+def test_duplicate_headers_are_preserved_for_source_validation(
+    tmp_path: Path, file_type: FileType
+) -> None:
+    path = tmp_path / f"duplicate.{file_type.value}"
+    if file_type is FileType.CSV:
+        path.write_text(
+            "row_id,name,name\nSYN-1,Synthetic Alpha,Synthetic Beta\n", encoding="utf-8"
+        )
+    else:
+        pd.DataFrame(
+            [["SYN-1", "Synthetic Alpha", "Synthetic Beta"]],
+            columns=["row_id", "name", "name"],
+        ).to_excel(path, index=False, engine="openpyxl")
+
+    loaded = load_source(_source(path, file_type))
+    result = inspect_source(loaded, ("name",))
+
+    assert list(loaded.data.columns) == ["row_id", "name", "name"]
+    assert not result.is_valid
+    duplicate = next(
+        issue for issue in result.errors if issue.code is ValidationCode.DUPLICATE_COLUMNS
+    )
+    assert duplicate.columns == ("name",)
+
+
+def test_csv_with_more_cells_than_headers_fails_instead_of_shifting_values(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "misaligned.csv"
+    path.write_text("row_id,name\nSYN-1,Synthetic Alpha,Extra\n", encoding="utf-8")
+
+    with pytest.raises(IngestionError, match=r"misaligned\.csv.*malformed"):
+        load_source(_source(path))
 
 
 def test_load_sources_loads_both_sides_of_engine_config(tmp_path: Path) -> None:
