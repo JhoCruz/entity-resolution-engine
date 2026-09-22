@@ -40,6 +40,9 @@ CSV and XLSX files are loaded into pandas data frames without trimming, normaliz
 cell values. Each loaded source also retains logical row numbers, starting at row 2 because row 1
 contains the header. The selected Excel worksheet and original source configuration remain attached
 to the loaded result for later audit reports.
+Headers are read as ordinary cells before they become column names so duplicate names remain visible
+to validation. A CSV row with more cells than its header fails during ingestion rather than silently
+shifting values into the wrong columns.
 
 Missing files, directories, empty sources, decoding failures, malformed CSV files, corrupt
 workbooks, and missing worksheets produce errors that include the source path and relevant context.

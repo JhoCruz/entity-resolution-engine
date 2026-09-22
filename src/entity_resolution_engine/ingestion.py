@@ -55,6 +55,7 @@ def _read_csv(source: SourceConfig) -> pd.DataFrame:
             source.path,
             sep=source.delimiter,
             encoding=source.encoding,
+            header=None,
             dtype=object,
             keep_default_na=False,
             na_filter=False,
@@ -91,6 +92,7 @@ def _read_xlsx(source: SourceConfig) -> tuple[pd.DataFrame, str]:
             data = pd.read_excel(
                 workbook,
                 sheet_name=worksheet,
+                header=None,
                 dtype=object,
                 keep_default_na=False,
                 na_filter=False,
@@ -114,6 +116,13 @@ def load_source(source: SourceConfig) -> LoadedSource:
         data, worksheet = _read_xlsx(source)
     else:  # pragma: no cover - FileType prevents unsupported values at the contract boundary
         raise _error(source, f"unsupported file type '{source.file_type}'.")
+
+    if not data.empty:
+        # A regular pandas header silently renames duplicates (e.g. name -> name.1).
+        # Parsing it as a row lets validation see the original column names.
+        headers = data.iloc[0].tolist()
+        data = data.iloc[1:].reset_index(drop=True)
+        data.columns = headers
 
     if data.empty:
         raise _error(source, "source contains no data rows.")
