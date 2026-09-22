@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from dataclasses import dataclass
+from datetime import date, datetime, time
 from enum import StrEnum
 from typing import Any, cast
 
@@ -14,10 +16,21 @@ from entity_resolution_engine.validation import ValidatedSource
 
 SOURCE_RECORD_ID_COLUMN = "source_record_id"
 SOURCE_ROW_COLUMN = "source_row"
+_ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+_LOCAL_DATE = re.compile(r"([0-9]{1,2})[./-]([0-9]{1,2})[./-]([0-9]{4})")
+_PHONE_NUMBER = re.compile(r"\+?[0-9(). -]+", re.ASCII)
+_PHONE_EXTENSION = re.compile(r"\s*(?:ext\.?|x)\s*([0-9]+)$", re.IGNORECASE | re.ASCII)
+_EMAIL_ATOM = r"[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+"
+_EMAIL_LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
+_EMAIL = re.compile(
+    rf"(?P<local>{_EMAIL_ATOM}(?:\.{_EMAIL_ATOM})*)@"
+    rf"(?P<domain>{_EMAIL_LABEL}(?:\.{_EMAIL_LABEL})*)",
+    re.ASCII,
+)
 
 
 class NormalizationStep(StrEnum):
-    """Stable names for each baseline transformation applied to a value."""
+    """Stable names for transformations applied to a comparison value."""
 
     COERCE_TO_TEXT = "coerce_to_text"
     UNICODE_NFKC = "unicode_nfkc"
@@ -26,15 +39,31 @@ class NormalizationStep(StrEnum):
     WHITESPACE_COLLAPSE = "whitespace_collapse"
     DIACRITICS_REMOVED = "diacritics_removed"
     NON_ALPHANUMERIC_REMOVED = "non_alphanumeric_removed"
+    OUTER_WHITESPACE_TRIM = "outer_whitespace_trim"
+    PHONE_FORMATTING_REMOVED = "phone_formatting_removed"
+    PHONE_EXTENSION_CANONICALIZED = "phone_extension_canonicalized"
+    DATETIME_TO_DATE = "datetime_to_date"
+    EMAIL_DOMAIN_LOWERCASE = "email_domain_lowercase"
+
+
+class NormalizationIssue(StrEnum):
+    """Reasons a present value cannot safely produce a comparison key."""
+
+    UNSUPPORTED_PHONE = "unsupported_phone"
+    AMBIGUOUS_DATE = "ambiguous_date"
+    INVALID_DATE = "invalid_date"
+    UNSUPPORTED_DATE = "unsupported_date"
+    UNSUPPORTED_EMAIL = "unsupported_email"
 
 
 @dataclass(frozen=True, slots=True)
 class NormalizedValue:
-    """One original value, its comparison form, and the transformations used."""
+    """An original value, comparison key, ordered transformations, and optional issue."""
 
     original: object
     normalized: str | None
     transformations: tuple[NormalizationStep, ...] = ()
+    issue: NormalizationIssue | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +76,7 @@ class NormalizedField:
     original_column: str
     normalized_column: str
     transformations_column: str
+    issue_column: str
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -128,6 +158,127 @@ def _record_semantic_transformation(
     )
 
 
+def _prepare_structured_text(value: object, *, nfkc: bool = True) -> NormalizedValue:
+    """Keep syntax significant for dates, phones, and e-mails."""
+    if not pd.api.types.is_scalar(value):
+        raise TypeError("Normalization accepts scalar values only.")
+    if _is_missing(value):
+        return NormalizedValue(original=value, normalized=None)
+
+    transformations: list[NormalizationStep] = []
+    if isinstance(value, str):
+        normalized = value
+    else:
+        normalized = str(value)
+        transformations.append(NormalizationStep.COERCE_TO_TEXT)
+
+    if nfkc:
+        unicode_normalized = unicodedata.normalize("NFKC", normalized)
+        if unicode_normalized != normalized:
+            normalized = unicode_normalized
+            transformations.append(NormalizationStep.UNICODE_NFKC)
+
+    stripped = normalized.strip()
+    if stripped != normalized:
+        normalized = stripped
+        transformations.append(NormalizationStep.OUTER_WHITESPACE_TRIM)
+
+    return NormalizedValue(value, normalized, tuple(transformations))
+
+
+def _with_issue(value: NormalizedValue, issue: NormalizationIssue) -> NormalizedValue:
+    return NormalizedValue(value.original, None, value.transformations, issue)
+
+
+def normalize_phone(value: object) -> NormalizedValue:
+    """Keep explicitly international and national numbers distinct, including extensions."""
+    prepared = _prepare_structured_text(value)
+    if prepared.normalized is None:
+        return prepared
+
+    original_text = prepared.normalized
+    extension_match = _PHONE_EXTENSION.search(original_text)
+    number = original_text[: extension_match.start()] if extension_match else original_text
+    if not _PHONE_NUMBER.fullmatch(number):
+        return _with_issue(prepared, NormalizationIssue.UNSUPPORTED_PHONE)
+
+    depth = 0
+    for character in number:
+        if character == "(":
+            depth += 1
+        elif character == ")":
+            depth -= 1
+        if depth < 0:
+            return _with_issue(prepared, NormalizationIssue.UNSUPPORTED_PHONE)
+    if depth:
+        return _with_issue(prepared, NormalizationIssue.UNSUPPORTED_PHONE)
+
+    digits = "".join(character for character in number if character.isdigit())
+    if not 3 <= len(digits) <= 15:
+        return _with_issue(prepared, NormalizationIssue.UNSUPPORTED_PHONE)
+
+    canonical_number = ("+" if number.startswith("+") else "") + digits
+    original_suffix = original_text[len(number) :]
+    result = _record_semantic_transformation(
+        prepared,
+        canonical_number + original_suffix,
+        NormalizationStep.PHONE_FORMATTING_REMOVED,
+    )
+    if extension_match:
+        result = _record_semantic_transformation(
+            result,
+            canonical_number + "x" + extension_match.group(1),
+            NormalizationStep.PHONE_EXTENSION_CANONICALIZED,
+        )
+    return result
+
+
+def normalize_date(value: object) -> NormalizedValue:
+    """Accept only explicit ISO calendar dates or date-typed cells."""
+    if isinstance(value, datetime):
+        if value.tzinfo is not None or value.time() != time.min:
+            return _with_issue(NormalizedValue(value, None), NormalizationIssue.UNSUPPORTED_DATE)
+        return NormalizedValue(
+            value,
+            value.date().isoformat(),
+            (NormalizationStep.COERCE_TO_TEXT, NormalizationStep.DATETIME_TO_DATE),
+        )
+    if isinstance(value, date):
+        return NormalizedValue(value, value.isoformat(), (NormalizationStep.COERCE_TO_TEXT,))
+
+    prepared = _prepare_structured_text(value)
+    if prepared.normalized is None:
+        return prepared
+    if _ISO_DATE.fullmatch(prepared.normalized):
+        try:
+            date.fromisoformat(prepared.normalized)
+        except ValueError:
+            return _with_issue(prepared, NormalizationIssue.INVALID_DATE)
+        return prepared
+
+    local = _LOCAL_DATE.fullmatch(prepared.normalized)
+    if local and all(1 <= int(part) <= 12 for part in local.groups()[:2]):
+        return _with_issue(prepared, NormalizationIssue.AMBIGUOUS_DATE)
+    return _with_issue(prepared, NormalizationIssue.UNSUPPORTED_DATE)
+
+
+def normalize_email(value: object) -> NormalizedValue:
+    """Preserve the mailbox local part and lowercase only its ASCII domain."""
+    prepared = _prepare_structured_text(value, nfkc=False)
+    if prepared.normalized is None:
+        return prepared
+
+    matched = _EMAIL.fullmatch(prepared.normalized)
+    if matched is None or len(matched.group("local")) > 64 or len(prepared.normalized) > 254:
+        return _with_issue(prepared, NormalizationIssue.UNSUPPORTED_EMAIL)
+
+    return _record_semantic_transformation(
+        prepared,
+        matched.group("local") + "@" + matched.group("domain").lower(),
+        NormalizationStep.EMAIL_DOMAIN_LOWERCASE,
+    )
+
+
 def normalize_person_name(value: object) -> NormalizedValue:
     """Create a diacritic-insensitive name key without changing token order."""
     baseline = normalize_text(value)
@@ -169,6 +320,12 @@ def normalize_semantic_value(
         return normalize_person_name(value)
     if semantic_type is SemanticFieldType.IDENTIFIER:
         return normalize_identifier(value)
+    if semantic_type is SemanticFieldType.PHONE:
+        return normalize_phone(value)
+    if semantic_type is SemanticFieldType.DATE:
+        return normalize_date(value)
+    if semantic_type is SemanticFieldType.EMAIL:
+        return normalize_email(value)
     return normalize_text(value)
 
 
@@ -184,6 +341,7 @@ def _field_metadata(
         original_column=f"{name}_original",
         normalized_column=f"{name}_normalized",
         transformations_column=f"{name}_transformations",
+        issue_column=f"{name}_issue",
     )
 
 
@@ -219,6 +377,10 @@ def _normalize_source(
             [tuple(step.value for step in result.transformations) for result in results],
             dtype=object,
         )
+        normalized_data[field.issue_column] = pd.Series(
+            [result.issue.value if result.issue else None for result in results],
+            dtype=object,
+        )
 
     return NormalizedSource(
         validated_source=source,
@@ -250,12 +412,16 @@ def normalize_sources(
 __all__ = [
     "SOURCE_RECORD_ID_COLUMN",
     "SOURCE_ROW_COLUMN",
+    "NormalizationIssue",
     "NormalizationStep",
     "NormalizedField",
     "NormalizedSource",
     "NormalizedValue",
+    "normalize_date",
+    "normalize_email",
     "normalize_identifier",
     "normalize_person_name",
+    "normalize_phone",
     "normalize_semantic_value",
     "normalize_sources",
     "normalize_text",
