@@ -7,8 +7,8 @@
 Auditable entity resolution for messy CSV and Excel data, combining deterministic rules,
 candidate blocking, fuzzy similarity, and confidence-based abstention.
 
-> **Project status:** normalization complete (`v0.1.0-dev`). The matching pipeline is being
-> implemented incrementally; no performance or accuracy claims are made yet.
+> **Project status:** exact-identifier baseline complete (`v0.1.0-dev`). Candidate blocking and
+> fuzzy scoring are next; no performance or accuracy claims are made yet.
 
 ## The problem
 
@@ -44,6 +44,8 @@ source values and row provenance, and source validation that blocks missing colu
 record identifiers without exposing their values. Normalization now produces auditable comparison
 keys for text, names, identifiers, phones, dates, and e-mails. Unsupported or ambiguous structured
 values carry an issue and no comparison key.
+The exact baseline now finds candidates through normalized identifiers and produces `match` or
+`review` with field evidence and stable reasons. Rows with no candidate remain unresolved.
 
 ## Quick start
 
@@ -56,12 +58,15 @@ uv sync --locked --extra dev
 uv run entity-resolution-engine doctor
 uv run entity-resolution-engine check-config examples/basic-job.toml
 uv run entity-resolution-engine inspect --config examples/basic-job.toml
+uv run entity-resolution-engine baseline --config examples/basic-job.toml
 ```
 
 The `inspect` command executes the complete first milestone: it loads both configured sources,
 validates their schemas and record identifiers, and prints row counts, mapped fields, warnings, and
 validation status. It never prints record values, and it states explicitly that matching has not run.
-Normalization is available through the Python API; a complete matching CLI is planned for later.
+The `baseline` command then normalizes both sources, checks exact identifiers and supporting
+fields, and prints only counts and review reasons. Other pairs remain unresolved until later
+candidate generation. A complete matching CLI is planned for later.
 
 Run the complete quality gate:
 
@@ -116,12 +121,18 @@ The configuration format is documented in
 [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md).
 The baseline transformation contract is documented in
 [`docs/NORMALIZATION.md`](docs/NORMALIZATION.md).
+The first decision rules are documented in
+[`docs/EXACT_BASELINE.md`](docs/EXACT_BASELINE.md).
 
 ## Data and privacy
 
 No employer data, internal system names, private documents, or real personal information belong in
 this repository. Benchmark records will be generated with Faker's `pt_BR` locale and controlled
 corruptions, with a fixed seed and known ground truth.
+The CLI currently prints counts only. Future local exports will offer a reduced review view and
+an explicitly requested full audit view; normalized names, phone numbers, and identifiers in the
+full view remain personal data. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the planned
+report privacy boundary.
 
 ## License
 

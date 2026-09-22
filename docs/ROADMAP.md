@@ -36,10 +36,11 @@ acceptance criteria pass locally and in CI.
 
 ## Milestone 3: Deterministic baseline
 
-- [ ] Match trustworthy exact identifiers.
-- [ ] Define agreement and conflict rules across multiple fields.
-- [ ] Emit component evidence and rejection reasons.
-- [ ] Detect ambiguous one-to-many and many-to-one matches.
+- [x] Match unique exact identifiers only with independent supporting evidence.
+- [x] Define agreement and conflict rules across multiple fields.
+- [x] Emit exact component evidence and review reasons without source values in CLI output.
+- [x] Detect ambiguous one-to-many and many-to-one matches.
+- [x] Keep rows with no exact-ID candidate available for later matching stages.
 
 ## Milestone 4: Candidate blocking and fuzzy scoring
 
@@ -63,6 +64,13 @@ acceptance criteria pass locally and in CI.
 - [ ] Store intermediate analytical tables and evaluation results in DuckDB.
 - [ ] Reconcile two files through one documented command.
 - [ ] Export matches, reviews, non-matches, conflicts, and a summary report.
+- [ ] Provide two explicit local report views: a reduced view with aggregate counts and per-run
+  opaque references for row-level decisions, without names, identifiers, phones, e-mails, source
+  values, normalized personal values, or stable hashes; and an opt-in full audit view with
+  original and normalized values, provenance, evidence, and reasons.
+- [ ] Test that the reduced view does not disclose values from synthetic input fixtures; keep the
+  full view out of logs and repository artifacts. Do not label the reduced view legally anonymous
+  without assessing whether records can be re-identified in its intended context.
 - [ ] Build and test the container image.
 - [ ] Tag `v1.0.0` only after every documented command is reproducible.
 

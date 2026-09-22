@@ -26,6 +26,7 @@ entity_resolution_engine/
 ├── ingestion.py        # CSV/XLSX loading and row provenance
 ├── validation.py       # Source schemas and record identifiers
 ├── normalization.py    # Field-specific canonicalization
+├── exact_baseline.py   # Safe exact-identifier candidates and decisions
 ├── blocking.py         # Candidate generation
 ├── scoring.py          # Pair-level evidence and confidence
 ├── reporting.py        # Auditable output tables
@@ -36,7 +37,8 @@ Modules are added only when their milestone begins. Empty architecture is docume
 
 ## Data flow guarantees
 
-- Original values remain available in reports.
+- Original values remain available for an explicitly requested local full audit report; the
+  default reduced report must not include original or normalized personal values.
 - Loaded records retain their source path, worksheet, and logical row number.
 - Missing mapped columns and invalid record identifiers block downstream processing.
 - Independent validation failures are returned together without exposing identifier values.
@@ -47,6 +49,19 @@ Modules are added only when their milestone begins. Empty architecture is docume
 - A match stores the exact rules and component scores that produced it.
 - Thresholds are explicit configuration, never hidden constants.
 - Ambiguous cases remain reviewable rather than silently forced into a binary decision.
+- Rows not found by exact identifiers remain eligible for later candidate strategies.
+
+## Planned report privacy boundary
+
+The current CLI prints aggregate counts only; it does not export files. Reporting is planned for
+Milestone 6. Its reduced view will include aggregate results and row-level decisions identified
+only by opaque references created for that run, plus field-level evidence without values. Its
+opt-in full audit view will retain the original and normalized values needed to investigate a
+decision, and must be written locally without printing personal values in logs or CLI output.
+An opaque reference is a pseudonym for review, not a guarantee of legal anonymization: linked
+records or other context may still permit re-identification. Normalizing a name, phone, or
+personal identifier does not make it anonymous. Both views use synthetic examples in this
+repository; operators are responsible for access control and lawful use of any real inputs.
 
 ## Initial non-goals
 
