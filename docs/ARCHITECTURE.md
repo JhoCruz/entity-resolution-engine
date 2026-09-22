@@ -42,6 +42,8 @@ Modules are added only when their milestone begins. Empty architecture is docume
 - Independent validation failures are returned together without exposing identifier values.
 - Normalized values never overwrite source data.
 - Every changed comparison value retains ordered normalization-step metadata.
+- Unsupported or ambiguous phone, date, and e-mail values retain a reason and cannot become
+  automatic comparison keys.
 - A match stores the exact rules and component scores that produced it.
 - Thresholds are explicit configuration, never hidden constants.
 - Ambiguous cases remain reviewable rather than silently forced into a binary decision.

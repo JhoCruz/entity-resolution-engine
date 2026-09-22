@@ -7,7 +7,7 @@
 Auditable entity resolution for messy CSV and Excel data, combining deterministic rules,
 candidate blocking, fuzzy similarity, and confidence-based abstention.
 
-> **Project status:** repository foundation (`v0.1.0-dev`). The matching pipeline is being
+> **Project status:** normalization complete (`v0.1.0-dev`). The matching pipeline is being
 > implemented incrementally; no performance or accuracy claims are made yet.
 
 ## The problem
@@ -41,8 +41,9 @@ flowchart LR
 The initial implementation includes the typed decision policy that separates automatic matches
 from records requiring human review, validated TOML contracts, CSV/XLSX loaders that preserve
 source values and row provenance, and source validation that blocks missing columns or invalid
-record identifiers without exposing their values. The normalization stage now retains original,
-canonical, and transformation metadata side by side; field-specific canonicalization is next.
+record identifiers without exposing their values. Normalization now produces auditable comparison
+keys for text, names, identifiers, phones, dates, and e-mails. Unsupported or ambiguous structured
+values carry an issue and no comparison key.
 
 ## Quick start
 
@@ -60,6 +61,7 @@ uv run entity-resolution-engine inspect --config examples/basic-job.toml
 The `inspect` command executes the complete first milestone: it loads both configured sources,
 validates their schemas and record identifiers, and prints row counts, mapped fields, warnings, and
 validation status. It never prints record values, and it states explicitly that matching has not run.
+Normalization is available through the Python API; a complete matching CLI is planned for later.
 
 Run the complete quality gate:
 
