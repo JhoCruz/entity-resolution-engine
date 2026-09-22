@@ -1,6 +1,7 @@
 """Command-line interface for the entity resolution engine."""
 
 import platform
+from collections import Counter
 from pathlib import Path
 from typing import Annotated
 
@@ -8,8 +9,14 @@ import typer
 
 from entity_resolution_engine import __version__
 from entity_resolution_engine.config import ConfigurationError, load_config
-from entity_resolution_engine.decision import DecisionPolicy
+from entity_resolution_engine.decision import DecisionPolicy, MatchDecision
+from entity_resolution_engine.exact_baseline import (
+    CandidateLimitError,
+    ExactReason,
+    resolve_exact_identifiers,
+)
 from entity_resolution_engine.ingestion import IngestionError, load_sources
+from entity_resolution_engine.normalization import normalize_sources
 from entity_resolution_engine.validation import (
     SourceValidationError,
     ValidatedSource,
@@ -126,3 +133,56 @@ def inspect_job(
     _report_source("Right", validated_right, mapped_field_count)
     typer.echo("Validation status: valid")
     typer.echo("Matching status: not run")
+
+
+@app.command("baseline")
+def baseline_job(
+    config_path: Annotated[
+        Path,
+        typer.Option("--config", "-c", help="Path to a TOML job configuration."),
+    ],
+) -> None:
+    """Show safe counts for conservative exact-identifier candidate decisions."""
+    try:
+        config = load_config(config_path)
+        loaded_left, loaded_right = load_sources(config)
+        validated_left, validated_right = validate_sources(config, loaded_left, loaded_right)
+        normalized_left, normalized_right = normalize_sources(
+            config, validated_left, validated_right
+        )
+        result = resolve_exact_identifiers(config, normalized_left, normalized_right)
+    except ConfigurationError as error:
+        typer.echo(f"Configuration error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    except IngestionError as error:
+        typer.echo(f"Ingestion error: {error}", err=True)
+        raise typer.Exit(code=3) from error
+    except SourceValidationError as error:
+        typer.echo(f"Validation error: {error}", err=True)
+        raise typer.Exit(code=4) from error
+    except CandidateLimitError as error:
+        typer.echo(f"Candidate limit: {error}", err=True)
+        raise typer.Exit(code=5) from error
+
+    matches = sum(pair.decision is MatchDecision.MATCH for pair in result.pairs)
+    reviews = len(result.pairs) - matches
+    review_reasons: Counter[ExactReason] = Counter(
+        reason
+        for pair in result.pairs
+        if pair.decision is MatchDecision.REVIEW
+        for reason in pair.reasons
+        if reason is not ExactReason.EXACT_IDENTIFIER
+    )
+    reasons = ", ".join(
+        f"{reason.value}={review_reasons[reason]}"
+        for reason in ExactReason
+        if review_reasons[reason]
+    )
+    typer.echo(f"Exact baseline complete: {config_path}")
+    typer.echo(f"Candidate pairs: {len(result.pairs)} | match: {matches} | review: {reviews}")
+    typer.echo(
+        "Rows without exact-ID candidates: "
+        f"left={len(result.left_without_candidate)} | right={len(result.right_without_candidate)}"
+    )
+    typer.echo(f"Review reasons: {reasons or 'none'}")
+    typer.echo("Matching status: exact identifiers only; other pairs unresolved")

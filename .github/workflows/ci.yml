@@ -46,6 +46,9 @@ jobs:
       - name: Exercise documented ingestion command
         run: uv run entity-resolution-engine inspect --config examples/basic-job.toml
 
+      - name: Exercise documented exact baseline command
+        run: uv run entity-resolution-engine baseline --config examples/basic-job.toml
+
   package:
     name: Package and container
     runs-on: ubuntu-latest
