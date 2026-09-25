@@ -7,6 +7,7 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 
+import duckdb
 import pytest
 
 from entity_resolution_engine.benchmark import generate_benchmark
@@ -86,3 +87,31 @@ def test_published_metrics_are_regenerated_byte_for_byte(tmp_path: Path) -> None
     artifact = json.loads(output.read_text(encoding="utf-8"))
     assert artifact["splits"]["tuning"]["seed"] != artifact["splits"]["final"]["seed"]
     assert "final: precision=" in process.stdout
+
+
+def test_analytics_database_keeps_candidate_decisions_and_is_repeatable(tmp_path: Path) -> None:
+    output, database = tmp_path / "metrics.json", tmp_path / "metrics.duckdb"
+    command = [
+        sys.executable,
+        "scripts/evaluate_benchmark.py",
+        "--output",
+        str(output),
+        "--database",
+        str(database),
+    ]
+    subprocess.run(command, check=True, capture_output=True, text=True)
+    subprocess.run(command, check=True, capture_output=True, text=True)
+
+    with duckdb.connect(str(database), read_only=True) as connection:
+        aggregates = connection.execute(
+            "SELECT split, selected_pairs FROM evaluation_splits ORDER BY split"
+        ).fetchall()
+        candidate_rows = connection.execute(
+            "SELECT split, COUNT(*) FROM candidate_decisions GROUP BY split ORDER BY split"
+        ).fetchall()
+        true_pairs = connection.execute(
+            "SELECT COUNT(*) FROM candidate_decisions WHERE split='final' AND is_true_pair"
+        ).fetchone()
+    assert aggregates == [("final", 71), ("tuning", 81)]
+    assert candidate_rows == aggregates
+    assert true_pairs == (63,)

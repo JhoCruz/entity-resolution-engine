@@ -101,6 +101,9 @@ uv run python scripts/evaluate_benchmark.py --output docs/evaluation/baseline.js
 
 See [`docs/EVALUATION.md`](docs/EVALUATION.md) for the metrics, fixed seeds, and limits. These
 synthetic results do not predict performance on real customer records.
+For a local timing and candidate-count example, run
+`uv run python scripts/benchmark_performance.py --output docs/evaluation/performance.json`.
+See [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) before interpreting the numbers.
 
 Run the complete quality gate:
 
