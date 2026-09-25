@@ -45,6 +45,23 @@ but held for review. No true pair was missed by blocking in this small synthetic
 numbers can be reproduced from the artifact; they are **not** an estimate of performance on real
 people.
 
+To keep local, queryable intermediate candidate decisions and per-split metrics as DuckDB tables:
+
+```bash
+uv run python scripts/evaluate_benchmark.py --output docs/evaluation/baseline.json \
+  --database benchmarks/analysis.duckdb
+```
+
+The optional database contains only generated synthetic record IDs, selected pairs, stages,
+decisions, scores, truth labels, and aggregate metrics. It is ignored by Git. Running the same
+command twice replaces the two split rows rather than duplicating decisions. For example:
+
+```sql
+SELECT split, stage, decision, COUNT(*) AS pairs
+FROM candidate_decisions
+GROUP BY split, stage, decision;
+```
+
 Use the `tuning` split to choose improvements. Reserve the `final` split for checking a chosen
 policy after tuning. Numeric similarity thresholds are not yet calibrated or applied. Before
 allowing fuzzy automatic matches, evaluate false matches on tuning labels, require independent

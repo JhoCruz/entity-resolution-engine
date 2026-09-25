@@ -61,8 +61,9 @@ acceptance criteria pass locally and in CI.
 
 ## Milestone 6: Performance and stable CLI
 
-- [ ] Benchmark runtime, memory, and candidate reduction at increasing dataset sizes.
-- [ ] Store intermediate analytical tables and evaluation results in DuckDB.
+- [x] Benchmark runtime, traced Python allocations, and candidate reduction at increasing
+  synthetic dataset sizes, documenting that traced allocations exclude native memory.
+- [x] Store synthetic intermediate candidate decisions and per-split evaluation results in DuckDB.
 - [x] Reconcile two files through one documented command.
 - [x] Export matches, reviews, non-matches, conflicts, and a summary report (no approximate
   non-match decision until calibrated).
@@ -73,7 +74,7 @@ acceptance criteria pass locally and in CI.
 - [x] Test that the reduced view does not disclose values from synthetic input fixtures; keep the
   full view out of logs and repository artifacts. Do not label the reduced view legally anonymous
   without assessing whether records can be re-identified in its intended context.
-- [ ] Build and test the container image.
+- [x] Build and test the container image in CI (including its entry point).
 - [ ] Tag `v1.0.0` only after every documented command is reproducible.
 
 ## Deferred work

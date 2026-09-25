@@ -1,0 +1,54 @@
+{
+  "measurement": "full reconciliation with tracemalloc enabled",
+  "memory_scope": "peak traced Python allocations; excludes untracked native allocations",
+  "observations": [
+    {
+      "candidate_reduction": 0.9783783783783784,
+      "date_candidates": 4,
+      "left_rows": 40,
+      "median_runtime_seconds": 0.0718,
+      "median_traced_python_peak_mib": 0.29,
+      "name_candidates": 9,
+      "possible_pairs": 1480,
+      "right_rows": 37,
+      "selected_pairs": 32
+    },
+    {
+      "candidate_reduction": 0.9887658227848102,
+      "date_candidates": 11,
+      "left_rows": 80,
+      "median_runtime_seconds": 0.1221,
+      "median_traced_python_peak_mib": 0.2984,
+      "name_candidates": 21,
+      "possible_pairs": 6320,
+      "right_rows": 79,
+      "selected_pairs": 71
+    },
+    {
+      "candidate_reduction": 0.994435975609756,
+      "date_candidates": 20,
+      "left_rows": 160,
+      "median_runtime_seconds": 0.1605,
+      "median_traced_python_peak_mib": 0.3846,
+      "name_candidates": 47,
+      "possible_pairs": 26240,
+      "right_rows": 164,
+      "selected_pairs": 146
+    },
+    {
+      "candidate_reduction": 0.9962059620596206,
+      "date_candidates": 29,
+      "left_rows": 240,
+      "median_runtime_seconds": 0.2249,
+      "median_traced_python_peak_mib": 0.5431,
+      "name_candidates": 76,
+      "possible_pairs": 59040,
+      "right_rows": 246,
+      "selected_pairs": 224
+    }
+  ],
+  "python": "3.12.14",
+  "repeats_per_size": 3,
+  "seed": 20260925,
+  "system": "Linux"
+}
