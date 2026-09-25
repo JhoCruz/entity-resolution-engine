@@ -231,6 +231,28 @@ def test_load_source_reports_csv_encoding_error(tmp_path: Path) -> None:
         load_source(_source(path))
 
 
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-16"])
+def test_load_source_rejects_embedded_nul_before_it_changes_an_identifier(
+    tmp_path: Path, encoding: str
+) -> None:
+    path = tmp_path / "nul.csv"
+    path.write_text("row_id,name\nSYN-1\x00TAIL,Synthetic Alpha\n", encoding=encoding)
+
+    with pytest.raises(IngestionError, match=r"nul\.csv.*embedded NUL character") as error:
+        load_source(_source(path, encoding=encoding))
+
+    assert "SYN-1" not in str(error.value)
+
+
+def test_load_source_accepts_utf16_without_embedded_nul(tmp_path: Path) -> None:
+    path = tmp_path / "encoded.csv"
+    path.write_text("row_id,name\nSYN-1,Synthetic Alpha\n", encoding="utf-16")
+
+    loaded = load_source(_source(path, encoding="utf-16"))
+
+    assert loaded.data.loc[0, "row_id"] == "SYN-1"
+
+
 def test_load_source_reports_malformed_csv(tmp_path: Path) -> None:
     path = tmp_path / "malformed.csv"
     path.write_text('row_id,name\nA-1,"unfinished\n', encoding="utf-8")

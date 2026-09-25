@@ -207,6 +207,25 @@ def _write_baseline_config(tmp_path: Path) -> Path:
     return path
 
 
+def test_baseline_rejects_nul_that_would_create_a_false_exact_match(tmp_path: Path) -> None:
+    (tmp_path / "left.csv").write_text(
+        "left_id,identity,name\nL-1,SYN-1\x00TAIL,Synthetic Alpha\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "right.csv").write_text(
+        "right_id,identity,name\nR-1,SYN-1,Synthetic Alpha\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["baseline", "--config", str(_write_baseline_config(tmp_path))])
+
+    assert result.exit_code == 3
+    assert "Ingestion error:" in result.output
+    assert "embedded NUL character" in result.output
+    assert "SYN-1" not in result.output
+    assert "match: 1" not in result.output
+
+
 def test_baseline_shows_review_reasons_without_record_values(tmp_path: Path) -> None:
     (tmp_path / "left.csv").write_text(
         "left_id,identity,name\nL-1,SYN-PRIVATE,Synthetic Alpha\nL-2,SYNPRIVATE,Synthetic Alpha\n",
