@@ -1,0 +1,48 @@
+{
+  "benchmark": "synthetic_brazilian_style_v1",
+  "method": "exact decisions plus review-only weighted name candidates",
+  "size_per_split": 80,
+  "splits": {
+    "final": {
+      "metrics": {
+        "automatic_matches": 23,
+        "blocking_recall": 0.8253968253968254,
+        "f1": 0.5348837209302325,
+        "false_match_examples": [],
+        "false_negatives": 40,
+        "false_positives": 0,
+        "precision": 1.0,
+        "recall": 0.36507936507936506,
+        "review_rate": 0.6166666666666667,
+        "reviewed_true_pairs": 29,
+        "reviews": 37,
+        "selected_pairs": 60,
+        "selected_true_pairs": 52,
+        "true_pairs": 63,
+        "true_positives": 23
+      },
+      "seed": 20260925
+    },
+    "tuning": {
+      "metrics": {
+        "automatic_matches": 20,
+        "blocking_recall": 0.9117647058823529,
+        "f1": 0.45454545454545453,
+        "false_match_examples": [],
+        "false_negatives": 48,
+        "false_positives": 0,
+        "precision": 1.0,
+        "recall": 0.29411764705882354,
+        "review_rate": 0.7333333333333333,
+        "reviewed_true_pairs": 42,
+        "reviews": 55,
+        "selected_pairs": 75,
+        "selected_true_pairs": 62,
+        "true_pairs": 68,
+        "true_positives": 20
+      },
+      "seed": 20260924
+    }
+  },
+  "thresholds_applied_to_name_scores": false
+}

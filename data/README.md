@@ -2,9 +2,10 @@
 
 Only reproducible synthetic data belongs in this repository.
 
-The benchmark generator planned for Milestone 5 will use Faker with the `pt_BR` locale, a fixed
-random seed, and controlled corruptions. It will emit both the altered records and the hidden
-ground-truth entity identifiers needed for evaluation.
+The benchmark generator uses a curated Brazilian-style pool, a fixed random seed, and controlled
+corruptions. It emits two source tables and a separate file with hidden entity keys and known
+true pairs. This avoids an extra dependency and guarantees every identifier is invented. See
+[`docs/EVALUATION.md`](../docs/EVALUATION.md) for regeneration and metric definitions.
 
 Never add:
 

@@ -46,17 +46,17 @@ acceptance criteria pass locally and in CI.
 
 - [x] Demonstrate why an unrestricted Cartesian comparison is unacceptable.
 - [x] Implement two bounded, transparent person-name blocking strategies with no match decisions.
-- [ ] Measure blocking recall against labeled ground truth.
+- [x] Measure blocking recall against labeled ground truth.
 - [x] Combine field similarities with configurable weights; abstain on name pairs pending calibration.
 - [ ] Calibrate `match`, `review`, and `no_match` thresholds on validation data only.
 
 ## Milestone 5: Synthetic benchmark and evaluation
 
-- [ ] Generate `pt_BR` entities with Faker and a fixed seed.
-- [ ] Apply controlled missingness, typos, transpositions, formatting changes, and conflicts.
-- [ ] Retain hidden entity identifiers as ground truth.
-- [ ] Report precision, recall, F1, review rate, and false-match examples.
-- [ ] Separate training/tuning data from the final benchmark.
+- [x] Generate Brazilian-style invented entities with a curated pool and fixed seed.
+- [x] Apply controlled missingness, typos, transpositions, formatting changes, and conflicts.
+- [x] Retain hidden entity identifiers as separate ground truth.
+- [x] Report precision, recall, F1, review rate, and false-match examples.
+- [x] Separate tuning data from the final benchmark.
 
 ## Milestone 6: Performance and stable CLI
 
