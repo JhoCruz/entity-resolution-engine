@@ -31,7 +31,7 @@ on production data or every regional naming pattern.
 
 | Metric | Definition |
 | --- | --- |
-| Blocking recall | True pairs selected by either candidate strategy divided by all true pairs. |
+| Blocking recall | True pairs selected by an exact ID, name key, or date key divided by all true pairs. |
 | Precision | Correct automatic matches divided by all automatic matches; zero if none. |
 | Recall | Correct automatic matches divided by all true pairs, including missed candidate pairs. |
 | F1 | Harmonic mean of precision and recall; zero if both are zero. |
@@ -40,9 +40,10 @@ on production data or every regional naming pattern.
 
 On the final synthetic split, the current exact-match rule accepted 23 out of 63 true pairs;
 no automatically accepted pair was wrong in this small test. Precision was 1.00, recall 0.365,
-F1 0.535, blocking recall 0.825, and review rate 0.617. Twenty-nine more true pairs were selected
-but held for review, and eleven true pairs were not selected at all. These numbers can be
-reproduced from the artifact; they are **not** an estimate of performance on real people.
+F1 0.535, blocking recall 1.00, and review rate 0.676. Forty more true pairs were selected
+but held for review. No true pair was missed by blocking in this small synthetic split. These
+numbers can be reproduced from the artifact; they are **not** an estimate of performance on real
+people.
 
 Use the `tuning` split to choose improvements. Reserve the `final` split for checking a chosen
 policy after tuning. Numeric similarity thresholds are not yet calibrated or applied. Before

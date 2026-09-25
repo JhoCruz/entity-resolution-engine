@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 from typer.testing import CliRunner
 
+import entity_resolution_engine.date_blocking as date_blocking
 from entity_resolution_engine.cli import app
 from entity_resolution_engine.config import load_config
 from entity_resolution_engine.decision import MatchDecision
@@ -193,3 +194,69 @@ def test_reconcile_refuses_to_replace_an_existing_report(tmp_path: Path) -> None
     assert response.exit_code == 6
     assert "already exists" in response.output
     assert (output / "matches.jsonl").read_bytes() == before
+
+
+def test_date_candidate_recovers_both_changed_name_anchors_for_review(tmp_path: Path) -> None:
+    path = _job(
+        tmp_path,
+        "row_id,name,id,date\nL-1,Ana Souza,,2000-01-01\n",
+        "row_id,name,id,date\nR-1,Zna Xouza,,2000-01-01\n",
+    )
+    config = load_config(path)
+    result = reconcile(config)
+    output = write_reports(config, result, tmp_path / "result")
+
+    assert not result.names.candidates
+    assert len(result.dates.candidates) == 1
+    reviews = _jsonl(output / "reviews.jsonl")
+    assert len(reviews) == 1
+    assert reviews[0]["stage"] == "date_blocking"
+    assert "date_only_candidate" in reviews[0]["reasons"]
+    assert reviews[0]["evidence"][2]["score"] == 1.0
+    assert not _jsonl(output / "matches.jsonl")
+
+
+def test_shared_date_generates_reviews_for_unrelated_people(tmp_path: Path) -> None:
+    path = _job(
+        tmp_path,
+        "row_id,name,id,date\nL-1,Ana Souza,SYN-A,2000-01-01\nL-2,Bruno Martins,SYN-B,2000-01-01\n",
+        "row_id,name,id,date\nR-1,Zara Xavier,SYN-C,2000-01-01\nR-2,Hugo Violet,SYN-D,2000-01-01\n",
+    )
+    config = load_config(path)
+    result = reconcile(config)
+
+    assert len(result.dates.candidates) == 4
+    assert len(result.scored) == 4
+    assert all(item.decision is MatchDecision.REVIEW for item in result.scored)
+    assert all("identifier_conflict" in item.reasons for item in result.scored)
+
+
+def test_invalid_dates_do_not_generate_date_candidates(tmp_path: Path) -> None:
+    path = _job(
+        tmp_path,
+        "row_id,name,id,date\nL-1,Ana Souza,,bad-date\n",
+        "row_id,name,id,date\nR-1,Zara Xavier,,bad-date\n",
+    )
+
+    result = reconcile(load_config(path))
+    assert not result.dates.candidates
+    assert not result.scored
+
+
+def test_common_date_key_is_bounded_without_disclosing_values(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(date_blocking, "MAX_PAIRS_PER_DATE_KEY", 3)
+    path = _job(
+        tmp_path,
+        "row_id,name,id,date\nL-1,Ana Souza,,2000-01-01\nL-2,Bruno Martins,,2000-01-01\n",
+        "row_id,name,id,date\nR-1,Zara Xavier,,2000-01-01\nR-2,Hugo Violet,,2000-01-01\n",
+    )
+
+    response = runner.invoke(
+        app, ["reconcile", "--config", str(path), "--output", str(tmp_path / "out")]
+    )
+    assert response.exit_code == 5
+    assert "Date field 'date' generates more than 3 pairs" in response.output
+    assert "2000-01-01" not in response.output
+    assert not (tmp_path / "out").exists()

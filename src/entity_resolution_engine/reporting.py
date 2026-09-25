@@ -84,7 +84,7 @@ def _pair(
     result: dict[str, object] = {
         "left_ref": left_refs[pair.left_source_row],
         "right_ref": right_refs[pair.right_source_row],
-        "stage": "exact_identifier" if isinstance(pair, ExactPair) else "name_similarity",
+        "stage": "exact_identifier" if isinstance(pair, ExactPair) else pair.stage,
         "decision": pair.decision.value,
         "reasons": [reason.value for reason in pair.reasons],
     }
@@ -195,6 +195,8 @@ def write_reports(
             "right_rows": result.right.row_count,
             "possible_pairs": result.names.possible_pairs,
             "selected_pairs": selected,
+            "name_candidates": len(result.names.candidates),
+            "date_candidates": len(result.dates.candidates),
             "pairs_not_selected_unresolved": result.names.possible_pairs - selected,
             "left_rows_without_candidates": result.left.row_count - len(left_rows),
             "right_rows_without_candidates": result.right.row_count - len(right_rows),

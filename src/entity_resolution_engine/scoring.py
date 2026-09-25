@@ -1,4 +1,4 @@
-"""Score name candidates transparently, without treating similarity as probability."""
+"""Score bounded candidates transparently, without treating similarity as probability."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from rapidfuzz.fuzz import ratio
 
 from entity_resolution_engine.blocking import NameCandidate
 from entity_resolution_engine.config import EngineConfig, SemanticFieldType
+from entity_resolution_engine.date_blocking import DateCandidate
 from entity_resolution_engine.decision import MatchDecision
 from entity_resolution_engine.exact_baseline import EvidenceOutcome, FieldEvidence
 from entity_resolution_engine.normalization import (
@@ -21,13 +22,14 @@ from entity_resolution_engine.normalization import (
 
 
 class FuzzyReason(StrEnum):
-    """Reasons a name candidate is held for review."""
+    """Reasons an approximate or date-only candidate is held for review."""
 
     UNCALIBRATED_SCORE = "uncalibrated_score"
     IDENTIFIER_CONFLICT = "identifier_conflict"
     STRUCTURED_CONFLICT = "structured_conflict"
     INVALID_FIELD = "invalid_field"
     INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+    DATE_ONLY_CANDIDATE = "date_only_candidate"
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +49,7 @@ class ScoredPair:
     left_source_row: int
     right_source_row: int
     decision: MatchDecision
+    stage: str
     score: float | None
     evidence: tuple[WeightedEvidence, ...]
     reasons: tuple[FuzzyReason, ...]
@@ -101,13 +104,13 @@ def _score_field(
     )
 
 
-def score_name_candidates(
+def score_candidates(
     config: EngineConfig,
     left: NormalizedSource,
     right: NormalizedSource,
-    candidates: tuple[NameCandidate, ...],
+    candidates: tuple[NameCandidate | DateCandidate, ...],
 ) -> tuple[ScoredPair, ...]:
-    """Weight comparable fields, but abstain until thresholds are validated on labels.
+    """Weight candidate fields, but abstain until thresholds are validated on labels.
 
     Missing and invalid fields do not contribute to the denominator. An exact
     structured-field conflict contributes zero, never approximate similarity.
@@ -140,6 +143,8 @@ def score_name_candidates(
             else None
         )
         reasons = [FuzzyReason.UNCALIBRATED_SCORE]
+        if isinstance(candidate, DateCandidate):
+            reasons.append(FuzzyReason.DATE_ONLY_CANDIDATE)
         if any(
             item.field.semantic_type is SemanticFieldType.IDENTIFIER
             and item.field.outcome is EvidenceOutcome.CONFLICT
@@ -168,6 +173,9 @@ def score_name_candidates(
                 left_source_row=candidate.left_source_row,
                 right_source_row=candidate.right_source_row,
                 decision=MatchDecision.REVIEW,
+                stage="date_blocking"
+                if isinstance(candidate, DateCandidate)
+                else "name_similarity",
                 score=score,
                 evidence=evidence,
                 reasons=tuple(reasons),

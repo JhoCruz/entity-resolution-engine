@@ -36,17 +36,17 @@ def test_synthetic_sources_are_reproducible_and_ground_truth_is_separate(tmp_pat
     assert all("SYN-" in line for line in (first / "left.csv").read_text().splitlines()[1:])
 
 
-def test_blocking_recall_counts_true_pairs_that_never_became_candidates(tmp_path: Path) -> None:
+def test_date_fallback_recovers_true_pairs_missed_by_name_anchors(tmp_path: Path) -> None:
     directory = tmp_path / "bench"
     generate_benchmark(directory, seed=20260925, size=80)
     result = reconcile(load_config(directory / "job.toml"))
     metrics = evaluate(result, _labels(directory / "labels.csv"))
 
     assert metrics.true_pairs == 63
-    assert metrics.selected_true_pairs == 52
-    assert metrics.blocking_recall == pytest.approx(52 / 63)
+    assert metrics.selected_true_pairs == 63
+    assert metrics.blocking_recall == 1.0
     assert metrics.recall == pytest.approx(23 / 63)
-    assert metrics.reviewed_true_pairs == 29
+    assert metrics.reviewed_true_pairs == 40
     assert metrics.false_negatives == 40
     assert metrics.false_positives == 0
 

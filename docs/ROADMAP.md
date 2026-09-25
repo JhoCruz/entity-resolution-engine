@@ -46,6 +46,7 @@ acceptance criteria pass locally and in CI.
 
 - [x] Demonstrate why an unrestricted Cartesian comparison is unacceptable.
 - [x] Implement two bounded, transparent person-name blocking strategies with no match decisions.
+- [x] Recover missed name pairs through a bounded exact-date key, always requiring review.
 - [x] Measure blocking recall against labeled ground truth.
 - [x] Combine field similarities with configurable weights; abstain on name pairs pending calibration.
 - [ ] Calibrate `match`, `review`, and `no_match` thresholds on validation data only.
