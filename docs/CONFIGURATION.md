@@ -75,7 +75,7 @@ columns.
 | `left_column` | Exact column name in the left source. |
 | `right_column` | Exact column name in the right source. |
 | `semantic_type` | `text`, `person_name`, `identifier`, `date`, `email`, or `phone`. |
-| `weight` | Positive relative importance reserved for the scoring milestone. |
+| `weight` | Positive relative importance for scoring selected name candidate pairs. |
 
 Logical names and source columns must be unique within their respective sides. A source's
 `record_id` cannot also be a matching field because it identifies rows for audit and reporting.
@@ -90,9 +90,12 @@ automatic_match = 0.90
 review = 0.70
 ```
 
-Scores at or above `automatic_match` become automatic matches. Scores at or above `review`, but
-below `automatic_match`, require review. Lower scores become non-matches. The configuration
-rejects thresholds outside `0..1` and requires `review < automatic_match`.
+The typed decision policy can map a calibrated score at or above `automatic_match` to a match,
+at or above `review` to review, and below `review` to no match. The current `reconcile` command
+does **not** apply these thresholds to approximate name similarities: all selected name pairs
+remain in review until calibration on labeled validation data. Exact-identifier decisions follow
+their own evidence rules. The configuration rejects thresholds outside `0..1` and requires
+`review < automatic_match`.
 
 ## Loading from Python
 

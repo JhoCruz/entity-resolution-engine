@@ -21,10 +21,11 @@ one token, unsupported characters at its edges, or no usable value produces no n
 Organization names mapped as generic
 `text` do not participate in this first name-based stage.
 
-These keys are **pointers for a future comparison**, not evidence that two rows describe the
-same person. Common names can group unrelated people, and two changed edge tokens can hide a
-true match. No recall, precision, or false-positive rate is claimed until the labeled synthetic
-benchmark and evaluation stage.
+These keys are **pointers for comparison**, not evidence that two rows describe the same person.
+The `reconcile` command scores selected name pairs and sends them to review; it excludes rows
+already safely matched by the exact baseline. Common names can group unrelated people, and two
+changed edge tokens can hide a true match. No recall, precision, or false-positive rate is
+claimed until the labeled synthetic benchmark and evaluation stage.
 
 ## Bounded work
 
@@ -43,5 +44,6 @@ uv run entity-resolution-engine candidates --config examples/name-variants-job.t
 
 The fixed-seed example contains two name variations whose identifiers no longer match the left
 source. Its expected summary is zero exact-ID pairs and two new name candidates, one from each
-strategy. Run `scripts/generate_example_data.py` to regenerate the sources. Fuzzy similarities,
-field weights, threshold calibration, and report export belong to later milestones.
+strategy. Run `scripts/generate_example_data.py` to regenerate the sources. `reconcile` scores
+these two pairs, reports conflicting identifiers, and keeps both in review. Threshold calibration
+and benchmark evaluation belong to later milestones; see [`REPORTS.md`](REPORTS.md).
