@@ -82,7 +82,7 @@ def _synthetic_people() -> tuple[SyntheticPerson, ...]:
 
 
 def generate_example_data(output_directory: Path = DEFAULT_OUTPUT_DIRECTORY) -> None:
-    """Write one CSV and one XLSX source derived from the same invented entities."""
+    """Write reproducible exact-match and name-variation sources."""
     output_directory.mkdir(parents=True, exist_ok=True)
     people = _synthetic_people()
 
@@ -122,6 +122,31 @@ def generate_example_data(output_directory: Path = DEFAULT_OUTPUT_DIRECTORY) -> 
         )
     _save_reproducible_workbook(workbook, output_directory / "customers_b.xlsx")
 
+    with (output_directory / "name_variants.csv").open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=("row_id", "customer_name", "document", "birth_date"),
+            lineterminator="\n",
+        )
+        writer.writeheader()
+        first, second = people[:2]
+        writer.writerow(
+            {
+                "row_id": "V-001",
+                "customer_name": first.name + "x",
+                "document": "SYN-UNLINKED-01",
+                "birth_date": first.birth_date,
+            }
+        )
+        writer.writerow(
+            {
+                "row_id": "V-002",
+                "customer_name": second.name.replace(" ", "o ", 1),
+                "document": "SYN-UNLINKED-02",
+                "birth_date": second.birth_date,
+            }
+        )
+
 
 def main() -> None:
     """Generate fixtures in the default directory or an explicit test location."""
@@ -130,7 +155,7 @@ def main() -> None:
         "--output-directory",
         type=Path,
         default=DEFAULT_OUTPUT_DIRECTORY,
-        help="Directory that will receive customers_a.csv and customers_b.xlsx.",
+        help="Directory that will receive the synthetic CSV/XLSX example sources.",
     )
     arguments = parser.parse_args()
     generate_example_data(arguments.output_directory)

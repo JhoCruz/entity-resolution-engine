@@ -4,11 +4,11 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Auditable entity resolution for messy CSV and Excel data, combining deterministic rules,
-candidate blocking, fuzzy similarity, and confidence-based abstention.
+Auditable entity resolution for messy CSV and Excel data, starting with deterministic rules and
+bounded candidate generation; fuzzy scoring and full reports are planned.
 
-> **Project status:** exact-identifier baseline complete (`v0.1.0-dev`). Candidate blocking and
-> fuzzy scoring are next; no performance or accuracy claims are made yet.
+> **Project status:** exact-identifier baseline and initial person-name candidate blocking are
+> available (`v0.1.0-dev`). Fuzzy scoring is next; no performance or accuracy claims are made yet.
 
 ## The problem
 
@@ -46,6 +46,7 @@ keys for text, names, identifiers, phones, dates, and e-mails. Unsupported or am
 values carry an issue and no comparison key.
 The exact baseline now finds candidates through normalized identifiers and produces `match` or
 `review` with field evidence and stable reasons. Rows with no candidate remain unresolved.
+Two name-based keys can find further candidate pairs; they do not make match decisions.
 
 ## Quick start
 
@@ -59,6 +60,7 @@ uv run entity-resolution-engine doctor
 uv run entity-resolution-engine check-config examples/basic-job.toml
 uv run entity-resolution-engine inspect --config examples/basic-job.toml
 uv run entity-resolution-engine baseline --config examples/basic-job.toml
+uv run entity-resolution-engine candidates --config examples/name-variants-job.toml
 ```
 
 The `inspect` command executes the complete first milestone: it loads both configured sources,
@@ -66,7 +68,8 @@ validates their schemas and record identifiers, and prints row counts, mapped fi
 validation status. It never prints record values, and it states explicitly that matching has not run.
 The `baseline` command then normalizes both sources, checks exact identifiers and supporting
 fields, and prints only counts and review reasons. Other pairs remain unresolved until later
-candidate generation. A complete matching CLI is planned for later.
+candidate generation. The `candidates` command also counts new pairs found from variations in
+person names, but does not score or classify them. A complete matching CLI is planned for later.
 
 Run the complete quality gate:
 
@@ -123,6 +126,8 @@ The baseline transformation contract is documented in
 [`docs/NORMALIZATION.md`](docs/NORMALIZATION.md).
 The first decision rules are documented in
 [`docs/EXACT_BASELINE.md`](docs/EXACT_BASELINE.md).
+The two name candidate keys and their limits are documented in
+[`docs/NAME_BLOCKING.md`](docs/NAME_BLOCKING.md).
 
 ## Data and privacy
 

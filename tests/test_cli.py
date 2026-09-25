@@ -2,8 +2,10 @@
 
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
+import entity_resolution_engine.blocking as blocking
 from entity_resolution_engine import __version__
 from entity_resolution_engine.cli import app
 
@@ -148,6 +150,48 @@ def test_baseline_resolves_documented_csv_xlsx_without_revealing_values() -> Non
     assert "other pairs unresolved" in result.stdout
     assert "SYN-" not in result.stdout
     assert "Ana" not in result.stdout
+
+
+def test_candidates_find_name_variations_without_revealing_source_values() -> None:
+    result = runner.invoke(app, ["candidates", "--config", "examples/name-variants-job.toml"])
+
+    assert result.exit_code == 0
+    assert "Exact-ID candidates: 0 | new name candidates: 2" in result.stdout
+    assert "Pairs not selected: 6 of 8" in result.stdout
+    assert "first_token_last_initial=1" in result.stdout
+    assert "last_token_first_initial=1" in result.stdout
+    assert "fuzzy scoring has not run" in result.stdout
+    assert "SYN-" not in result.stdout
+    assert "Ana" not in result.stdout
+
+
+def test_candidates_do_not_count_exact_identifier_pairs_twice() -> None:
+    result = runner.invoke(app, ["candidates", "--config", "examples/basic-job.toml"])
+
+    assert result.exit_code == 0
+    assert "Exact-ID candidates: 4 | new name candidates: 0" in result.stdout
+    assert "Pairs not selected: 12 of 16" in result.stdout
+
+
+def test_candidates_bounded_common_name_key_does_not_expose_values(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(blocking, "MAX_PAIRS_PER_NAME_KEY", 3)
+    (tmp_path / "left.csv").write_text(
+        "left_id,name\nL-1,Synthetic Private\nL-2,Synthetic Private\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "right.csv").write_text(
+        "right_id,name\nR-1,Synthetic Private\nR-2,Synthetic Private\n",
+        encoding="utf-8",
+    )
+
+    config_path = _write_inspection_config(tmp_path, tmp_path / "right.csv")
+    result = runner.invoke(app, ["candidates", "--config", str(config_path)])
+
+    assert result.exit_code == 5
+    assert "Candidate limit:" in result.output
+    assert "Synthetic Private" not in result.output
 
 
 def _write_baseline_config(tmp_path: Path) -> Path:
