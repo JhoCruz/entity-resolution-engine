@@ -91,10 +91,11 @@ review = 0.70
 ```
 
 The typed decision policy can map a calibrated score at or above `automatic_match` to a match,
-at or above `review` to review, and below `review` to no match. The current `reconcile` command
-does **not** apply these thresholds to approximate name similarities: all selected name pairs
-remain in review until calibration on labeled validation data. Exact-identifier decisions follow
-their own evidence rules. The configuration rejects thresholds outside `0..1` and requires
+at or above `review` to review, and below `review` to no match. The `reconcile` command does
+**not** apply these configuration thresholds to approximate similarities by default: all selected
+name and date pairs remain in review. With an explicit `--calibration` file, compatible tuned
+thresholds are applied under the [opt-in safeguards](CALIBRATION.md). Exact-identifier decisions
+follow their own evidence rules. The configuration rejects thresholds outside `0..1` and requires
 `review < automatic_match`.
 
 ## Loading from Python

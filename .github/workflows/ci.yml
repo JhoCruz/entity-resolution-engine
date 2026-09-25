@@ -63,6 +63,14 @@ jobs:
           uv run python scripts/evaluate_benchmark.py --output /tmp/reproduced-benchmark.json
           cmp docs/evaluation/baseline.json /tmp/reproduced-benchmark.json
 
+      - name: Verify synthetic policy and opt-in workflow
+        run: |
+          uv run python scripts/calibrate_policy.py --output /tmp/reproduced-policy.json
+          cmp docs/evaluation/synthetic-policy.json /tmp/reproduced-policy.json
+          uv run python scripts/generate_benchmark.py --output-directory benchmarks/ci --seed 20260925
+          uv run entity-resolution-engine reconcile --config benchmarks/ci/job.toml --output reports/ci-calibrated --calibration docs/evaluation/synthetic-policy.json
+          test -s reports/ci-calibrated/matches.jsonl
+
       - name: Exercise local performance harness
         run: uv run python scripts/benchmark_performance.py --sizes 8 16 --repeats 1 --output /tmp/performance.json
 

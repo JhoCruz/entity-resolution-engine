@@ -18,21 +18,23 @@ prints counts and the output location; it never prints record values. `--full-au
 | `summary.json` | Counts of rows, possible and selected pairs, name and date candidates, decisions, conflicts, and rows without candidates. |
 | `matches.jsonl` | Automatically accepted exact-identifier pairs and their field evidence. |
 | `reviews.jsonl` | Ambiguous exact pairs and all currently scored name or date pairs. |
-| `non_matches.jsonl` | Explicitly rejected candidate pairs; currently empty pending calibration. |
+| `non_matches.jsonl` | Explicitly rejected candidate pairs; empty in the default mode. |
 | `conflicts.jsonl` | A subset of reviews with conflicting fields, for triage. |
 
 Each pair includes `left_ref` and `right_ref`, random opaque references unique to one run,
 decision, stage, safe reasons, and evidence containing field names, field types, outcomes, and
 scores. Name and date candidates also include blocking strategies, configured weights, a weighted
-similarity, and the configured thresholds with status `not_calibrated_not_applied`.
+similarity, and the thresholds with status `not_calibrated_not_applied` by default or
+`synthetic_tuning_only` when a demonstration policy is explicitly selected.
 
 Only available, valid field values contribute to the weighted mean. Person names and generic
 text use normalized character similarity; identifiers, dates, phones, and e-mails contribute
 only exact agreement (1) or conflict (0). Missing and invalid values have no score, and their
 absence remains visible in evidence. A high similarity can still describe two different people.
-All name- and date-based pairs therefore receive `review` until thresholds are calibrated on
-labeled data. Date-only candidates are marked `date_only_candidate`, because a matching birthday
-alone cannot establish identity.
+By default all name- and date-based pairs receive `review`. With the explicit synthetic
+demonstration policy, unique name pairs with independent support may be accepted or rejected
+using tuned thresholds. Date-only candidates stay in review because a matching birthday alone
+cannot establish identity; they are marked `date_only_candidate`.
 The exact-identifier stage uses its own documented conservative evidence rules, not a fuzzy score.
 
 The references change on every run and cannot be joined to row numbers without the full view.

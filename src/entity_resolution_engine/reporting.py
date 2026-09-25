@@ -23,6 +23,7 @@ from entity_resolution_engine.normalization import (
     SOURCE_ROW_COLUMN,
     NormalizedSource,
 )
+from entity_resolution_engine.policy import SyntheticPolicy
 from entity_resolution_engine.reconciliation import ReconciliationResult
 from entity_resolution_engine.scoring import ScoredPair
 
@@ -80,6 +81,7 @@ def _pair(
     left_refs: dict[int, str],
     right_refs: dict[int, str],
     config: EngineConfig,
+    policy: SyntheticPolicy | None,
 ) -> dict[str, object]:
     result: dict[str, object] = {
         "left_ref": left_refs[pair.left_source_row],
@@ -95,9 +97,13 @@ def _pair(
     else:
         result["score"] = pair.score
         result["thresholds"] = {
-            "review": config.decision_policy.review_threshold,
-            "automatic_match": config.decision_policy.automatic_match_threshold,
-            "status": "not_calibrated_not_applied",
+            "review": policy.review if policy else config.decision_policy.review_threshold,
+            "automatic_match": (
+                policy.automatic_match
+                if policy
+                else config.decision_policy.automatic_match_threshold
+            ),
+            "status": "synthetic_tuning_only" if policy else "not_calibrated_not_applied",
         }
         result["origins"] = list(pair.origins)
         result["evidence"] = [_field(item.field, weight=item.weight) for item in pair.evidence]
@@ -182,7 +188,9 @@ def write_reports(
         right_refs = _source_refs(result.right)
         exact_pairs = result.exact.pairs
         pairs: tuple[ExactPair | ScoredPair, ...] = (*exact_pairs, *result.scored)
-        rendered = tuple(_pair(pair, left_refs, right_refs, config) for pair in pairs)
+        rendered = tuple(
+            _pair(pair, left_refs, right_refs, config, result.policy) for pair in pairs
+        )
         matches = [row for row in rendered if row["decision"] == MatchDecision.MATCH.value]
         reviews = [row for row in rendered if row["decision"] == MatchDecision.REVIEW.value]
         non_matches = [row for row in rendered if row["decision"] == MatchDecision.NO_MATCH.value]
@@ -204,7 +212,8 @@ def write_reports(
             "reviews": len(reviews),
             "non_matches": len(non_matches),
             "conflicts_subset_of_reviews": len(conflicts),
-            "fuzzy_thresholds_calibrated": False,
+            "fuzzy_thresholds_calibrated": result.policy is not None,
+            "calibration_source": result.policy.source if result.policy else None,
             "full_audit_included": full_audit,
         }
         _write_json(stage / "summary.json", summary)

@@ -11,6 +11,12 @@ from entity_resolution_engine.decision import MatchDecision
 from entity_resolution_engine.exact_baseline import ExactBaselineResult, resolve_exact_identifiers
 from entity_resolution_engine.ingestion import load_sources
 from entity_resolution_engine.normalization import NormalizedSource, normalize_sources
+from entity_resolution_engine.policy import (
+    PolicyError,
+    SyntheticPolicy,
+    apply_policy,
+    field_contract,
+)
 from entity_resolution_engine.scoring import ScoredPair, score_candidates
 from entity_resolution_engine.validation import validate_sources
 
@@ -25,10 +31,13 @@ class ReconciliationResult:
     names: NameBlockingResult
     dates: DateBlockingResult
     scored: tuple[ScoredPair, ...]
+    policy: SyntheticPolicy | None = None
 
 
-def reconcile(config: EngineConfig) -> ReconciliationResult:
+def reconcile(config: EngineConfig, policy: SyntheticPolicy | None = None) -> ReconciliationResult:
     """Load, validate, normalize, find candidates, and abstain on fuzzy pairs."""
+    if policy and policy.field_contract != field_contract(config):
+        raise PolicyError("Calibration field contract differs from this job.")
     loaded_left, loaded_right = load_sources(config)
     validated_left, validated_right = validate_sources(config, loaded_left, loaded_right)
     left, right = normalize_sources(config, validated_left, validated_right)
@@ -54,4 +63,6 @@ def reconcile(config: EngineConfig) -> ReconciliationResult:
         excluded_right_rows=frozenset(pair.right_source_row for pair in matches),
     )
     scored = score_candidates(config, left, right, (*names.candidates, *dates.candidates))
-    return ReconciliationResult(left, right, exact, names, dates, scored)
+    if policy:
+        scored = apply_policy(exact.pairs, scored, policy)
+    return ReconciliationResult(left, right, exact, names, dates, scored, policy)
