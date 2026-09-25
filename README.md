@@ -9,7 +9,7 @@ bounded name candidates, weighted similarity, and separate local report views.
 
 > **Project status:** a local `reconcile` command and opt-in full audit are available in development.
 > Name similarities always require review until thresholds have been tested on labeled data.
-> Accuracy and performance have not been measured yet.
+> Baseline accuracy has been measured only on invented records; scale has not been measured yet.
 
 ## The problem
 
@@ -92,6 +92,15 @@ only by the current user where supported. Treat the full view as personal data i
 tool on real people. The sample data in this repository is synthetic. See
 [`docs/REPORTS.md`](docs/REPORTS.md) for the report format and limitations.
 
+Reproduce baseline evaluation on labeled synthetic sources with:
+
+```bash
+uv run python scripts/evaluate_benchmark.py --output docs/evaluation/baseline.json
+```
+
+See [`docs/EVALUATION.md`](docs/EVALUATION.md) for the metrics, fixed seeds, and limits. These
+synthetic results do not predict performance on real customer records.
+
 Run the complete quality gate:
 
 ```bash
@@ -153,8 +162,8 @@ The two name candidate keys and their limits are documented in
 ## Data and privacy
 
 No employer data, internal system names, private documents, or real personal information belong in
-this repository. Benchmark records will be generated with Faker's `pt_BR` locale and controlled
-corruptions, with a fixed seed and known ground truth.
+this repository. Benchmark records use curated Brazilian-style names and invented identifiers,
+with fixed seeds, controlled corruptions, and separate ground truth.
 The CLI prints counts and output locations only. The reduced report uses fresh opaque references
 per run; these do not prove legal anonymization. The opt-in full audit contains original and
 normalized values. Keep all outputs under `reports/` (ignored by Git), or outside the repository.

@@ -52,6 +52,17 @@ jobs:
       - name: Exercise documented name candidates command
         run: uv run entity-resolution-engine candidates --config examples/name-variants-job.toml
 
+      - name: Exercise local reconciliation reports
+        run: |
+          uv run entity-resolution-engine reconcile --config examples/name-variants-job.toml --output reports/ci
+          test -s reports/ci/summary.json
+          test -s reports/ci/reviews.jsonl
+
+      - name: Verify published synthetic benchmark
+        run: |
+          uv run python scripts/evaluate_benchmark.py --output /tmp/reproduced-benchmark.json
+          cmp docs/evaluation/baseline.json /tmp/reproduced-benchmark.json
+
   package:
     name: Package and container
     runs-on: ubuntu-latest
