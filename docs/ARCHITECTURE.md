@@ -50,6 +50,8 @@ Modules are added only when their milestone begins. Empty architecture is docume
 - Thresholds are explicit configuration, never hidden constants.
 - Ambiguous cases remain reviewable rather than silently forced into a binary decision.
 - Rows not found by exact identifiers remain eligible for later candidate strategies.
+- Name blocking can add candidates through two bounded keys without changing exact decisions;
+  those candidates remain unresolved until fuzzy scoring and evaluation are implemented.
 
 ## Planned report privacy boundary
 

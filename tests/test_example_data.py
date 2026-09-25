@@ -25,7 +25,7 @@ def test_example_data_is_reproducible_and_structurally_valid(tmp_path: Path) -> 
     _generate(first_directory)
     _generate(second_directory)
 
-    for filename in ("customers_a.csv", "customers_b.xlsx"):
+    for filename in ("customers_a.csv", "customers_b.xlsx", "name_variants.csv"):
         assert (first_directory / filename).read_bytes() == (
             second_directory / filename
         ).read_bytes()
@@ -36,6 +36,7 @@ def test_example_data_is_reproducible_and_structurally_valid(tmp_path: Path) -> 
         sheet_name="Customers",
         dtype=object,
     )
+    variants = pd.read_csv(first_directory / "name_variants.csv", dtype=object)
 
     assert list(left.columns) == [
         "customer_id",
@@ -51,3 +52,6 @@ def test_example_data_is_reproducible_and_structurally_valid(tmp_path: Path) -> 
         left["tax_identifier"].str.replace("-", "", regex=False).tolist()
         == right["document"].tolist()
     )
+    assert list(variants.columns) == ["row_id", "customer_name", "document", "birth_date"]
+    assert len(variants) == 2
+    assert all(value not in left["tax_identifier"].tolist() for value in variants["document"])

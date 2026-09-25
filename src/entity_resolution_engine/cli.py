@@ -8,6 +8,7 @@ from typing import Annotated
 import typer
 
 from entity_resolution_engine import __version__
+from entity_resolution_engine.blocking import NameBlockingLimitError, generate_name_candidates
 from entity_resolution_engine.config import ConfigurationError, load_config
 from entity_resolution_engine.decision import DecisionPolicy, MatchDecision
 from entity_resolution_engine.exact_baseline import (
@@ -186,3 +187,58 @@ def baseline_job(
     )
     typer.echo(f"Review reasons: {reasons or 'none'}")
     typer.echo("Matching status: exact identifiers only; other pairs unresolved")
+
+
+@app.command("candidates")
+def candidates_job(
+    config_path: Annotated[
+        Path,
+        typer.Option("--config", "-c", help="Path to a TOML job configuration."),
+    ],
+) -> None:
+    """Count exact-ID and new name candidates without printing record values."""
+    try:
+        config = load_config(config_path)
+        loaded_left, loaded_right = load_sources(config)
+        validated_left, validated_right = validate_sources(config, loaded_left, loaded_right)
+        normalized_left, normalized_right = normalize_sources(
+            config, validated_left, validated_right
+        )
+        exact = resolve_exact_identifiers(config, normalized_left, normalized_right)
+        names = generate_name_candidates(
+            normalized_left,
+            normalized_right,
+            excluded_source_rows=frozenset(
+                (pair.left_source_row, pair.right_source_row) for pair in exact.pairs
+            ),
+        )
+    except ConfigurationError as error:
+        typer.echo(f"Configuration error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    except IngestionError as error:
+        typer.echo(f"Ingestion error: {error}", err=True)
+        raise typer.Exit(code=3) from error
+    except SourceValidationError as error:
+        typer.echo(f"Validation error: {error}", err=True)
+        raise typer.Exit(code=4) from error
+    except (CandidateLimitError, NameBlockingLimitError) as error:
+        typer.echo(f"Candidate limit: {error}", err=True)
+        raise typer.Exit(code=5) from error
+
+    selected = len(exact.pairs) + len(names.candidates)
+    strategy_hits = Counter(
+        origin.strategy for candidate in names.candidates for origin in candidate.origins
+    )
+    typer.echo(f"Candidate search complete: {config_path}")
+    typer.echo(
+        f"Exact-ID candidates: {len(exact.pairs)} | new name candidates: {len(names.candidates)}"
+    )
+    typer.echo(f"Pairs not selected: {names.possible_pairs - selected} of {names.possible_pairs}")
+    typer.echo(
+        "Name strategy hits: "
+        + (
+            ", ".join(f"{strategy.value}={strategy_hits[strategy]}" for strategy in strategy_hits)
+            or "none"
+        )
+    )
+    typer.echo("Name candidates are unresolved; fuzzy scoring has not run")

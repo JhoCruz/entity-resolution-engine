@@ -44,8 +44,8 @@ acceptance criteria pass locally and in CI.
 
 ## Milestone 4: Candidate blocking and fuzzy scoring
 
-- [ ] Demonstrate why an unrestricted Cartesian comparison is unacceptable.
-- [ ] Implement at least two transparent blocking strategies.
+- [x] Demonstrate why an unrestricted Cartesian comparison is unacceptable.
+- [x] Implement two bounded, transparent person-name blocking strategies with no match decisions.
 - [ ] Measure blocking recall against labeled ground truth.
 - [ ] Combine field similarities with configurable weights.
 - [ ] Calibrate `match`, `review`, and `no_match` thresholds on validation data only.
