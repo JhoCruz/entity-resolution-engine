@@ -1,5 +1,5 @@
 {
-  "benchmark": "synthetic_brazilian_style_v1",
+  "benchmark": "synthetic_brazilian_style_v2",
   "method": "exact decisions plus review-only weighted name and date candidates",
   "size_per_split": 80,
   "splits": {
@@ -13,10 +13,10 @@
         "false_positives": 0,
         "precision": 1.0,
         "recall": 0.36507936507936506,
-        "review_rate": 0.676056338028169,
+        "review_rate": 0.6891891891891891,
         "reviewed_true_pairs": 40,
-        "reviews": 48,
-        "selected_pairs": 71,
+        "reviews": 51,
+        "selected_pairs": 74,
         "selected_true_pairs": 63,
         "true_pairs": 63,
         "true_positives": 23
@@ -33,10 +33,10 @@
         "false_positives": 0,
         "precision": 1.0,
         "recall": 0.29411764705882354,
-        "review_rate": 0.7530864197530864,
+        "review_rate": 0.7701149425287356,
         "reviewed_true_pairs": 48,
-        "reviews": 61,
-        "selected_pairs": 81,
+        "reviews": 67,
+        "selected_pairs": 87,
         "selected_true_pairs": 68,
         "true_pairs": 68,
         "true_positives": 20

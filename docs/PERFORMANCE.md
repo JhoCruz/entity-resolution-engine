@@ -10,7 +10,9 @@ The script creates fixed-seed synthetic sources with 40, 80, 160, and 240 left r
 reconciles each size three times, and reports median full-job runtime, peak memory traced by
 Python, and selected pairs relative to every possible cross-source pair. The current generator
 supports at most 256 distinct left names. The artifact records the Python and operating-system
-versions used for that run; **timings and allocations will differ on another machine**.
+versions used for that run; **timings and allocations will differ on another machine**. The
+current v2 generator also includes unrelated records that share a birth date, so rerun the
+command when changing its cases rather than comparing stale timing artifacts.
 
 `tracemalloc` tracks Python-managed allocations during reconciliation. It does not count all
 native memory used by pandas, RapidFuzz, or DuckDB; the memory values must not be interpreted

@@ -24,7 +24,8 @@ The generator uses a curated Brazilian-style name pool and Python's seeded rando
 avoiding an extra library dependency. It samples cases with identical values, identifier
 formatting changes, transposed letters, missing or conflicting identifiers, altered dates, a pair
 whose two name anchors are changed, and entities absent on the right. Some unrelated right records
-have similar names. This test covers only these invented conditions; it cannot establish accuracy
+have similar names; a few harder unrelated records also share the left record's birth date and
+have no identifier. This test covers only these invented conditions; it cannot establish accuracy
 on production data or every regional naming pattern.
 
 ## Reading the numbers
@@ -40,7 +41,7 @@ on production data or every regional naming pattern.
 
 On the final synthetic split, the current exact-match rule accepted 23 out of 63 true pairs;
 no automatically accepted pair was wrong in this small test. Precision was 1.00, recall 0.365,
-F1 0.535, blocking recall 1.00, and review rate 0.676. Forty more true pairs were selected
+F1 0.535, blocking recall 1.00, and review rate 0.689. Forty more true pairs were selected
 but held for review. No true pair was missed by blocking in this small synthetic split. These
 numbers can be reproduced from the artifact; they are **not** an estimate of performance on real
 people.
@@ -62,7 +63,8 @@ FROM candidate_decisions
 GROUP BY split, stage, decision;
 ```
 
-Use the `tuning` split to choose improvements. Reserve the `final` split for checking a chosen
-policy after tuning. Numeric similarity thresholds are not yet calibrated or applied. Before
-allowing fuzzy automatic matches, evaluate false matches on tuning labels, require independent
-corroboration and one-to-one pairing, then assess the chosen policy on final only once.
+The [synthetic demonstration policy](CALIBRATION.md) was selected using only tuning labels.
+Its [reproducible artifact](evaluation/synthetic-policy.json) shows 30 accepted true pairs out of
+63 on the held-out final split, versus 23 for the default baseline, with no observed false match
+in either set. The policy remains opt-in and is not validated for real-world records. Selecting
+thresholds on final outcomes would invalidate the held-out comparison.

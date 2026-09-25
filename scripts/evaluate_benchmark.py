@@ -125,7 +125,7 @@ def benchmark(*, size: int = 80, database: Path | None = None) -> dict[str, obje
         if connection:
             connection.close()
     return {
-        "benchmark": "synthetic_brazilian_style_v1",
+        "benchmark": "synthetic_brazilian_style_v2",
         "size_per_split": size,
         "method": "exact decisions plus review-only weighted name and date candidates",
         "thresholds_applied_to_name_scores": False,

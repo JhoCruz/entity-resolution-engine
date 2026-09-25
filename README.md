@@ -8,7 +8,8 @@ Auditable entity resolution for messy CSV and Excel data, with deterministic exa
 bounded name and date candidates, weighted similarity, and separate local report views.
 
 > **Project status:** a local `reconcile` command and opt-in full audit are available in development.
-> Name and date candidates always require review until thresholds have been tested on labeled data.
+> Name and date candidates require review by default. An explicitly selected synthetic policy
+> demonstrates calibrated decisions; it is not validated for real-world records.
 > Baseline accuracy has been measured only on invented records; scale has not been measured yet.
 
 ## The problem
@@ -77,8 +78,9 @@ and writes a summary and four JSON Lines files: `matches.jsonl`, `reviews.jsonl`
 `non_matches.jsonl`, and `conflicts.jsonl`. Conflicts are also in `reviews.jsonl`.
 The output directory must be new. These reports contain counts, random references that change
 each run, numeric evidence, and reasons; they contain no source values or source row numbers.
-`non_matches.jsonl` is empty while approximate thresholds are uncalibrated; unseen pairs do not
-become non-matches just because blocking omitted them.
+`non_matches.jsonl` is empty in the default conservative mode. With an explicit calibration file,
+low-scoring name candidates can be rejected. Unseen pairs do not become non-matches just because
+blocking omitted them.
 
 For an explicitly requested local audit with the original and normalized values:
 
@@ -101,6 +103,18 @@ uv run python scripts/evaluate_benchmark.py --output docs/evaluation/baseline.js
 
 See [`docs/EVALUATION.md`](docs/EVALUATION.md) for the metrics, fixed seeds, and limits. These
 synthetic results do not predict performance on real customer records.
+For an **opt-in synthetic demonstration**, generate the example split and run the policy tuned on
+the separate tuning split:
+
+```bash
+uv run python scripts/generate_benchmark.py --output-directory benchmarks/final --seed 20260925
+uv run entity-resolution-engine reconcile --config benchmarks/final/job.toml \
+  --output reports/final-calibrated --calibration docs/evaluation/synthetic-policy.json
+```
+
+Regenerate the policy and its held-out evaluation with
+`uv run python scripts/calibrate_policy.py --output docs/evaluation/synthetic-policy.json`.
+See [`docs/CALIBRATION.md`](docs/CALIBRATION.md) for safeguards and limitations.
 For a local timing and candidate-count example, run
 `uv run python scripts/benchmark_performance.py --output docs/evaluation/performance.json`.
 See [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) before interpreting the numbers.

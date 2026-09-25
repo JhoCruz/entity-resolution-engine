@@ -89,14 +89,21 @@ def generate_date_candidates(
         left_groups = _date_groups(left, left_field)
         right_groups = _date_groups(right, right_field)
         for key, left_indexes in left_groups.items():
-            right_indexes = right_groups.get(key, ())
-            if len(left_indexes) * len(right_indexes) > MAX_PAIRS_PER_DATE_KEY:
+            active_left = [
+                index for index in left_indexes if left_rows[index] not in excluded_left_rows
+            ]
+            active_right = [
+                index
+                for index in right_groups.get(key, ())
+                if right_rows[index] not in excluded_right_rows
+            ]
+            if len(active_left) * len(active_right) > MAX_PAIRS_PER_DATE_KEY:
                 raise DateBlockingLimitError(
                     f"Date field '{left_field.name}' generates more than "
                     f"{MAX_PAIRS_PER_DATE_KEY} pairs from one value."
                 )
-            for left_index in left_indexes:
-                for right_index in right_indexes:
+            for left_index in active_left:
+                for right_index in active_right:
                     pair = (left_rows[left_index], right_rows[right_index])
                     if (
                         pair in excluded_source_rows

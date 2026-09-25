@@ -141,6 +141,16 @@ def generate_benchmark(directory: Path, *, seed: int = 20260925, size: int = 80)
                 "birth_date": "1960-01-01",
             }
         )
+        if index % 10 == 0:
+            # A hard negative shares a birth date and a similar name, but has no true pair.
+            right_rows.append(
+                {
+                    "row_id": f"H-{index:04d}",
+                    "name": f"{first} {last}xyz",
+                    "identity": "",
+                    "birth_date": left_rows[index]["birth_date"],
+                }
+            )
     generator.shuffle(right_rows)
     _write_csv(directory / "left.csv", LEFT_COLUMNS, left_rows)
     _write_csv(directory / "right.csv", RIGHT_COLUMNS, right_rows)

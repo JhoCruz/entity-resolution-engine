@@ -19,6 +19,7 @@ from entity_resolution_engine.exact_baseline import (
 )
 from entity_resolution_engine.ingestion import IngestionError, load_sources
 from entity_resolution_engine.normalization import normalize_sources
+from entity_resolution_engine.policy import PolicyError, load_policy
 from entity_resolution_engine.reconciliation import reconcile
 from entity_resolution_engine.reporting import ReportError, write_reports
 from entity_resolution_engine.validation import (
@@ -261,11 +262,16 @@ def reconcile_job(
         bool,
         typer.Option("--full-audit", help="Also save original and normalized values locally."),
     ] = False,
+    calibration: Annotated[
+        Path | None,
+        typer.Option("--calibration", help="Opt-in synthetic demonstration policy JSON."),
+    ] = None,
 ) -> None:
     """Reconcile both sources and save reduced reports, with an optional full audit."""
     try:
         config = load_config(config_path)
-        result = reconcile(config)
+        policy = load_policy(calibration, config) if calibration else None
+        result = reconcile(config, policy)
         saved = write_reports(config, result, output, full_audit=full_audit)
     except ConfigurationError as error:
         typer.echo(f"Configuration error: {error}", err=True)
@@ -282,12 +288,23 @@ def reconcile_job(
     except ReportError as error:
         typer.echo(f"Report error: {error}", err=True)
         raise typer.Exit(code=6) from error
+    except PolicyError as error:
+        typer.echo(f"Calibration error: {error}", err=True)
+        raise typer.Exit(code=2) from error
 
-    matches = sum(pair.decision is MatchDecision.MATCH for pair in result.exact.pairs)
-    reviews = len(result.exact.pairs) - matches + len(result.scored)
+    matches = sum(pair.decision is MatchDecision.MATCH for pair in result.exact.pairs) + sum(
+        pair.decision is MatchDecision.MATCH for pair in result.scored
+    )
+    reviews = sum(pair.decision is MatchDecision.REVIEW for pair in result.exact.pairs) + sum(
+        pair.decision is MatchDecision.REVIEW for pair in result.scored
+    )
+    non_matches = sum(pair.decision is MatchDecision.NO_MATCH for pair in result.scored)
     typer.echo(f"Reconciliation complete: {saved}")
     typer.echo(f"Selected pairs: {len(result.exact.pairs) + len(result.scored)}")
-    typer.echo(f"Matches: {matches} | reviews: {reviews}")
-    typer.echo("Name and date candidates require review until scores are calibrated.")
+    typer.echo(f"Matches: {matches} | reviews: {reviews} | non-matches: {non_matches}")
+    if result.policy:
+        typer.echo("Synthetic demonstration policy applied; inspect its limitations before use.")
+    else:
+        typer.echo("Name and date candidates require review until scores are calibrated.")
     typer.echo("Pairs not selected remain unresolved; see summary.json for counts.")
     typer.echo("Full audit saved locally." if full_audit else "Reduced report saved locally.")

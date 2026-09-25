@@ -1,0 +1,81 @@
+{
+  "benchmark": "synthetic_brazilian_style_v2",
+  "field_contract": [
+    [
+      "name",
+      "person_name",
+      0.45
+    ],
+    [
+      "identity",
+      "identifier",
+      0.35
+    ],
+    [
+      "birth_date",
+      "date",
+      0.2
+    ]
+  ],
+  "final_seed": 20260925,
+  "heldout_final_with_policy": {
+    "automatic_matches": 30,
+    "blocking_recall": 1.0,
+    "f1": 0.6451612903225806,
+    "false_match_examples": [],
+    "false_negatives": 33,
+    "false_positives": 0,
+    "precision": 1.0,
+    "recall": 0.47619047619047616,
+    "review_rate": 0.5945945945945946,
+    "reviewed_true_pairs": 33,
+    "reviews": 44,
+    "selected_pairs": 74,
+    "selected_true_pairs": 63,
+    "true_pairs": 63,
+    "true_positives": 30
+  },
+  "limitations": "Synthetic demonstration; no real-data reliability claim.",
+  "schema_version": 1,
+  "source": "synthetic_tuning_only",
+  "thresholds": {
+    "automatic_enabled": true,
+    "automatic_match": 0.9,
+    "review": 0.62
+  },
+  "tuning_baseline": {
+    "automatic_matches": 20,
+    "blocking_recall": 1.0,
+    "f1": 0.45454545454545453,
+    "false_match_examples": [],
+    "false_negatives": 48,
+    "false_positives": 0,
+    "precision": 1.0,
+    "recall": 0.29411764705882354,
+    "review_rate": 0.7701149425287356,
+    "reviewed_true_pairs": 48,
+    "reviews": 67,
+    "selected_pairs": 87,
+    "selected_true_pairs": 68,
+    "true_pairs": 68,
+    "true_positives": 20
+  },
+  "tuning_seed": 20260924,
+  "tuning_with_policy": {
+    "automatic_matches": 35,
+    "blocking_recall": 1.0,
+    "f1": 0.6796116504854368,
+    "false_match_examples": [],
+    "false_negatives": 33,
+    "false_positives": 0,
+    "precision": 1.0,
+    "recall": 0.5147058823529411,
+    "review_rate": 0.5977011494252874,
+    "reviewed_true_pairs": 33,
+    "reviews": 52,
+    "selected_pairs": 87,
+    "selected_true_pairs": 68,
+    "true_pairs": 68,
+    "true_positives": 35
+  }
+}

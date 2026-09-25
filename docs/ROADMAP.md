@@ -49,7 +49,9 @@ acceptance criteria pass locally and in CI.
 - [x] Recover missed name pairs through a bounded exact-date key, always requiring review.
 - [x] Measure blocking recall against labeled ground truth.
 - [x] Combine field similarities with configurable weights; abstain on name pairs pending calibration.
-- [ ] Calibrate `match`, `review`, and `no_match` thresholds on validation data only.
+- [x] Tune demonstration `match`, `review`, and `no_match` thresholds on labeled synthetic
+  tuning data only, then assess the chosen policy on held-out synthetic data. Default remains
+  review-only; real-world calibration requires separately permitted labeled data.
 
 ## Milestone 5: Synthetic benchmark and evaluation
 

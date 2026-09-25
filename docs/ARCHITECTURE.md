@@ -52,8 +52,9 @@ Modules are added only when their milestone begins. Empty architecture is docume
 - Ambiguous cases remain reviewable rather than silently forced into a binary decision.
 - Rows not found by exact identifiers remain eligible for later candidate strategies.
 - Name blocking adds candidates through two bounded keys. Date blocking adds candidates through
-  a bounded valid-date key after removing existing pairs. Exact decisions remain unchanged; the
-  full CLI scores additional pairs and requires review until labeled calibration is complete.
+  a bounded valid-date key after removing existing pairs. Exact decisions remain unchanged. The
+  full CLI scores additional pairs and requires review by default; the synthetic demonstration
+  policy can be explicitly selected with its field contract and one-to-one safeguards.
 
 ## Report privacy boundary
 

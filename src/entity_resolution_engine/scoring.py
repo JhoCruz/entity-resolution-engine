@@ -30,6 +30,9 @@ class FuzzyReason(StrEnum):
     INVALID_FIELD = "invalid_field"
     INSUFFICIENT_EVIDENCE = "insufficient_evidence"
     DATE_ONLY_CANDIDATE = "date_only_candidate"
+    CALIBRATED_MATCH = "calibrated_match"
+    CALIBRATED_REVIEW = "calibrated_review"
+    BELOW_REVIEW_THRESHOLD = "below_review_threshold"
 
 
 @dataclass(frozen=True, slots=True)

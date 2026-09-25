@@ -112,6 +112,6 @@ def test_analytics_database_keeps_candidate_decisions_and_is_repeatable(tmp_path
         true_pairs = connection.execute(
             "SELECT COUNT(*) FROM candidate_decisions WHERE split='final' AND is_true_pair"
         ).fetchone()
-    assert aggregates == [("final", 71), ("tuning", 81)]
+    assert aggregates == [("final", 74), ("tuning", 87)]
     assert candidate_rows == aggregates
     assert true_pairs == (63,)
