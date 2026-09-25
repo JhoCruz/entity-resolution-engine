@@ -31,6 +31,9 @@ jobs:
       - name: Install Python and dependencies
         run: uv sync --locked --extra dev
 
+      - name: Verify release version
+        run: test "$(uv run entity-resolution-engine --version)" = "1.0.0"
+
       - name: Lint
         run: uv run ruff check .
 
@@ -95,3 +98,6 @@ jobs:
 
       - name: Exercise container entry point
         run: docker run --rm entity-resolution-engine:ci doctor
+
+      - name: Verify container release version
+        run: test "$(docker run --rm entity-resolution-engine:ci --version)" = "1.0.0"

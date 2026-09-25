@@ -25,6 +25,10 @@ def test_doctor_reports_ready_environment() -> None:
     assert result.exit_code == 0
     assert f"entity-resolution-engine {__version__}" in result.stdout
     assert "Default decision policy" in result.stdout
+    assert (
+        "Approximate pairs require review unless --calibration is explicitly selected."
+        in result.stdout
+    )
     assert result.stdout.rstrip().endswith("Environment ready.")
 
 

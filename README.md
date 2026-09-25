@@ -7,10 +7,14 @@
 Auditable entity resolution for messy CSV and Excel data, with deterministic exact matches,
 bounded name and date candidates, weighted similarity, and separate local report views.
 
-> **Project status:** a local `reconcile` command and opt-in full audit are available in development.
+> **Project status:** `v1.0.0` is a local command-line workflow with reduced and opt-in full
+> audit reports. The default approximate matching behavior is conservative.
 > Name and date candidates require review by default. An explicitly selected synthetic policy
 > demonstrates calibrated decisions; it is not validated for real-world records.
 > Baseline accuracy has been measured only on invented records; scale has not been measured yet.
+
+Start with the [v1.0.0 release guide](docs/RELEASE_1_0.md) for runnable examples, evidence, and
+limits.
 
 ## The problem
 
