@@ -60,6 +60,7 @@ def doctor() -> None:
         f"review >= {policy.review_threshold:.2f}; "
         f"automatic match >= {policy.automatic_match_threshold:.2f}"
     )
+    typer.echo("Approximate pairs require review unless --calibration is explicitly selected.")
     typer.echo("Environment ready.")
 
 
