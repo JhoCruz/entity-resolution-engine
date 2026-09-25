@@ -4,11 +4,12 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Auditable entity resolution for messy CSV and Excel data, starting with deterministic rules and
-bounded candidate generation; fuzzy scoring and full reports are planned.
+Auditable entity resolution for messy CSV and Excel data, with deterministic exact matches,
+bounded name candidates, weighted similarity, and separate local report views.
 
-> **Project status:** exact-identifier baseline and initial person-name candidate blocking are
-> available (`v0.1.0-dev`). Fuzzy scoring is next; no performance or accuracy claims are made yet.
+> **Project status:** a local `reconcile` command and opt-in full audit are available in development.
+> Name similarities always require review until thresholds have been tested on labeled data.
+> Accuracy and performance have not been measured yet.
 
 ## The problem
 
@@ -44,9 +45,10 @@ source values and row provenance, and source validation that blocks missing colu
 record identifiers without exposing their values. Normalization now produces auditable comparison
 keys for text, names, identifiers, phones, dates, and e-mails. Unsupported or ambiguous structured
 values carry an issue and no comparison key.
-The exact baseline now finds candidates through normalized identifiers and produces `match` or
-`review` with field evidence and stable reasons. Rows with no candidate remain unresolved.
-Two name-based keys can find further candidate pairs; they do not make match decisions.
+The exact baseline finds candidates through normalized identifiers and produces `match` or
+`review` with field evidence and stable reasons. Two name-based keys find additional pairs, which
+receive weighted field similarities and a `review` outcome. A similarity score is not the
+probability that a pair is correct. Pairs never compared remain unresolved.
 
 ## Quick start
 
@@ -61,15 +63,34 @@ uv run entity-resolution-engine check-config examples/basic-job.toml
 uv run entity-resolution-engine inspect --config examples/basic-job.toml
 uv run entity-resolution-engine baseline --config examples/basic-job.toml
 uv run entity-resolution-engine candidates --config examples/name-variants-job.toml
+uv run entity-resolution-engine reconcile --config examples/name-variants-job.toml --output reports/variants
+uv run entity-resolution-engine reconcile --config examples/basic-job.toml --output reports/exact
 ```
 
 The `inspect` command executes the complete first milestone: it loads both configured sources,
 validates their schemas and record identifiers, and prints row counts, mapped fields, warnings, and
 validation status. It never prints record values, and it states explicitly that matching has not run.
-The `baseline` command then normalizes both sources, checks exact identifiers and supporting
-fields, and prints only counts and review reasons. Other pairs remain unresolved until later
-candidate generation. The `candidates` command also counts new pairs found from variations in
-person names, but does not score or classify them. A complete matching CLI is planned for later.
+The `baseline` command checks exact identifiers and supporting fields; `candidates` also counts
+new pairs found from variations in person names. The `reconcile` command runs the whole pipeline
+and writes a summary and four JSON Lines files: `matches.jsonl`, `reviews.jsonl`,
+`non_matches.jsonl`, and `conflicts.jsonl`. Conflicts are also in `reviews.jsonl`.
+The output directory must be new. These reports contain counts, random references that change
+each run, numeric evidence, and reasons; they contain no source values or source row numbers.
+`non_matches.jsonl` is empty while approximate thresholds are uncalibrated; unseen pairs do not
+become non-matches just because blocking omitted them.
+
+For an explicitly requested local audit with the original and normalized values:
+
+```bash
+uv run entity-resolution-engine reconcile --config examples/name-variants-job.toml \
+  --output reports/variants-audit --full-audit
+```
+
+This additionally writes `full/normalized_left.jsonl`, `full/normalized_right.jsonl`, and
+`full/audit.jsonl` under the new output directory. The audit files and directory are readable
+only by the current user where supported. Treat the full view as personal data if you run the
+tool on real people. The sample data in this repository is synthetic. See
+[`docs/REPORTS.md`](docs/REPORTS.md) for the report format and limitations.
 
 Run the complete quality gate:
 
@@ -134,10 +155,9 @@ The two name candidate keys and their limits are documented in
 No employer data, internal system names, private documents, or real personal information belong in
 this repository. Benchmark records will be generated with Faker's `pt_BR` locale and controlled
 corruptions, with a fixed seed and known ground truth.
-The CLI currently prints counts only. Future local exports will offer a reduced review view and
-an explicitly requested full audit view; normalized names, phone numbers, and identifiers in the
-full view remain personal data. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the planned
-report privacy boundary.
+The CLI prints counts and output locations only. The reduced report uses fresh opaque references
+per run; these do not prove legal anonymization. The opt-in full audit contains original and
+normalized values. Keep all outputs under `reports/` (ignored by Git), or outside the repository.
 
 ## License
 

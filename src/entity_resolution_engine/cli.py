@@ -18,6 +18,8 @@ from entity_resolution_engine.exact_baseline import (
 )
 from entity_resolution_engine.ingestion import IngestionError, load_sources
 from entity_resolution_engine.normalization import normalize_sources
+from entity_resolution_engine.reconciliation import reconcile
+from entity_resolution_engine.reporting import ReportError, write_reports
 from entity_resolution_engine.validation import (
     SourceValidationError,
     ValidatedSource,
@@ -242,3 +244,49 @@ def candidates_job(
         )
     )
     typer.echo("Name candidates are unresolved; fuzzy scoring has not run")
+
+
+@app.command("reconcile")
+def reconcile_job(
+    config_path: Annotated[
+        Path,
+        typer.Option("--config", "-c", help="Path to a TOML job configuration."),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option("--output", "-o", help="New directory for local report files."),
+    ],
+    full_audit: Annotated[
+        bool,
+        typer.Option("--full-audit", help="Also save original and normalized values locally."),
+    ] = False,
+) -> None:
+    """Reconcile both sources and save reduced reports, with an optional full audit."""
+    try:
+        config = load_config(config_path)
+        result = reconcile(config)
+        saved = write_reports(config, result, output, full_audit=full_audit)
+    except ConfigurationError as error:
+        typer.echo(f"Configuration error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    except IngestionError as error:
+        typer.echo(f"Ingestion error: {error}", err=True)
+        raise typer.Exit(code=3) from error
+    except SourceValidationError as error:
+        typer.echo(f"Validation error: {error}", err=True)
+        raise typer.Exit(code=4) from error
+    except (CandidateLimitError, NameBlockingLimitError) as error:
+        typer.echo(f"Candidate limit: {error}", err=True)
+        raise typer.Exit(code=5) from error
+    except ReportError as error:
+        typer.echo(f"Report error: {error}", err=True)
+        raise typer.Exit(code=6) from error
+
+    matches = sum(pair.decision is MatchDecision.MATCH for pair in result.exact.pairs)
+    reviews = len(result.exact.pairs) - matches + len(result.scored)
+    typer.echo(f"Reconciliation complete: {saved}")
+    typer.echo(f"Selected pairs: {len(result.exact.pairs) + len(result.scored)}")
+    typer.echo(f"Matches: {matches} | reviews: {reviews}")
+    typer.echo("Name candidates require review until scores are calibrated on labeled data.")
+    typer.echo("Pairs not selected remain unresolved; see summary.json for counts.")
+    typer.echo("Full audit saved locally." if full_audit else "Reduced report saved locally.")

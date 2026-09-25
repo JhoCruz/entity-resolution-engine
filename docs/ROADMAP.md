@@ -47,7 +47,7 @@ acceptance criteria pass locally and in CI.
 - [x] Demonstrate why an unrestricted Cartesian comparison is unacceptable.
 - [x] Implement two bounded, transparent person-name blocking strategies with no match decisions.
 - [ ] Measure blocking recall against labeled ground truth.
-- [ ] Combine field similarities with configurable weights.
+- [x] Combine field similarities with configurable weights; abstain on name pairs pending calibration.
 - [ ] Calibrate `match`, `review`, and `no_match` thresholds on validation data only.
 
 ## Milestone 5: Synthetic benchmark and evaluation
@@ -62,13 +62,14 @@ acceptance criteria pass locally and in CI.
 
 - [ ] Benchmark runtime, memory, and candidate reduction at increasing dataset sizes.
 - [ ] Store intermediate analytical tables and evaluation results in DuckDB.
-- [ ] Reconcile two files through one documented command.
-- [ ] Export matches, reviews, non-matches, conflicts, and a summary report.
-- [ ] Provide two explicit local report views: a reduced view with aggregate counts and per-run
+- [x] Reconcile two files through one documented command.
+- [x] Export matches, reviews, non-matches, conflicts, and a summary report (no approximate
+  non-match decision until calibrated).
+- [x] Provide two explicit local report views: a reduced view with aggregate counts and per-run
   opaque references for row-level decisions, without names, identifiers, phones, e-mails, source
   values, normalized personal values, or stable hashes; and an opt-in full audit view with
   original and normalized values, provenance, evidence, and reasons.
-- [ ] Test that the reduced view does not disclose values from synthetic input fixtures; keep the
+- [x] Test that the reduced view does not disclose values from synthetic input fixtures; keep the
   full view out of logs and repository artifacts. Do not label the reduced view legally anonymous
   without assessing whether records can be re-identified in its intended context.
 - [ ] Build and test the container image.

@@ -50,16 +50,15 @@ Modules are added only when their milestone begins. Empty architecture is docume
 - Thresholds are explicit configuration, never hidden constants.
 - Ambiguous cases remain reviewable rather than silently forced into a binary decision.
 - Rows not found by exact identifiers remain eligible for later candidate strategies.
-- Name blocking can add candidates through two bounded keys without changing exact decisions;
-  those candidates remain unresolved until fuzzy scoring and evaluation are implemented.
+- Name blocking adds candidates through two bounded keys without changing exact decisions; the
+  full CLI scores them and requires review until a labeled evaluation calibrates thresholds.
 
-## Planned report privacy boundary
+## Report privacy boundary
 
-The current CLI prints aggregate counts only; it does not export files. Reporting is planned for
-Milestone 6. Its reduced view will include aggregate results and row-level decisions identified
-only by opaque references created for that run, plus field-level evidence without values. Its
-opt-in full audit view will retain the original and normalized values needed to investigate a
-decision, and must be written locally without printing personal values in logs or CLI output.
+The CLI prints aggregate counts and output locations. The default reduced view includes counts
+and row-level decisions identified only by opaque references created for that run, plus field-level
+evidence without values. The opt-in full audit retains original and normalized values needed to
+investigate a decision, and is written locally without printing personal values in CLI output.
 An opaque reference is a pseudonym for review, not a guarantee of legal anonymization: linked
 records or other context may still permit re-identification. Normalizing a name, phone, or
 personal identifier does not make it anonymous. Both views use synthetic examples in this

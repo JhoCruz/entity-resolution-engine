@@ -93,8 +93,10 @@ def generate_name_candidates(
     right: NormalizedSource,
     *,
     excluded_source_rows: frozenset[tuple[int, int]] = frozenset(),
+    excluded_left_rows: frozenset[int] = frozenset(),
+    excluded_right_rows: frozenset[int] = frozenset(),
 ) -> NameBlockingResult:
-    """Use two name anchors; skip pairs already found by the exact-ID baseline."""
+    """Use two name anchors; skip exact pairs and rows already safely matched."""
     left_fields = tuple((field.name, field.semantic_type) for field in left.fields)
     right_fields = tuple((field.name, field.semantic_type) for field in right.fields)
     if left_fields != right_fields:
@@ -122,7 +124,11 @@ def generate_name_candidates(
                     )
                 for left_index in left_indexes:
                     for right_index in right_indexes:
-                        if (left_rows[left_index], right_rows[right_index]) in excluded_source_rows:
+                        if (
+                            (left_rows[left_index], right_rows[right_index]) in excluded_source_rows
+                            or left_rows[left_index] in excluded_left_rows
+                            or right_rows[right_index] in excluded_right_rows
+                        ):
                             continue
                         candidates[left_index, right_index].add(
                             NameBlockOrigin(left_field.name, strategy)
