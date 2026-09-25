@@ -44,8 +44,11 @@ Headers are read as ordinary cells before they become column names so duplicate 
 to validation. A CSV row with more cells than its header fails during ingestion rather than silently
 shifting values into the wrong columns.
 
-Missing files, directories, empty sources, decoding failures, malformed CSV files, corrupt
-workbooks, and missing worksheets produce errors that include the source path and relevant context.
+Missing files, directories, empty sources, decoding failures, malformed CSV files, embedded NUL
+characters, corrupt workbooks, and missing worksheets produce errors that include the source path
+and relevant context. NUL characters are rejected before pandas parses CSV because they can
+silently truncate a cell and create a false identifier match; the check uses decoded text so
+ordinary UTF-16 files remain valid.
 
 ## Source validation behavior
 

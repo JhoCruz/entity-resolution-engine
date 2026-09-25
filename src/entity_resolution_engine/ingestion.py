@@ -51,6 +51,13 @@ def _check_source_file(source: SourceConfig) -> None:
 
 def _read_csv(source: SourceConfig) -> pd.DataFrame:
     try:
+        # The pandas CSV parser can silently truncate a cell at NUL, changing an identifier.
+        # Scan decoded text so UTF-16 byte pairs are not mistaken for embedded characters.
+        with source.path.open("r", encoding=source.encoding, newline="") as handle:
+            while chunk := handle.read(65_536):
+                if "\x00" in chunk:
+                    raise _error(source, "CSV contains an embedded NUL character.")
+
         return pd.read_csv(
             source.path,
             sep=source.delimiter,
