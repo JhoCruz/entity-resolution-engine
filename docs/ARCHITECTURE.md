@@ -28,6 +28,7 @@ entity_resolution_engine/
 ├── normalization.py    # Field-specific canonicalization
 ├── exact_baseline.py   # Safe exact-identifier candidates and decisions
 ├── blocking.py         # Candidate generation
+├── date_blocking.py    # Bounded exact-date candidate fallback
 ├── scoring.py          # Pair-level evidence and confidence
 ├── reporting.py        # Auditable output tables
 └── evaluation.py       # Accuracy and performance measurement
@@ -50,8 +51,9 @@ Modules are added only when their milestone begins. Empty architecture is docume
 - Thresholds are explicit configuration, never hidden constants.
 - Ambiguous cases remain reviewable rather than silently forced into a binary decision.
 - Rows not found by exact identifiers remain eligible for later candidate strategies.
-- Name blocking adds candidates through two bounded keys without changing exact decisions; the
-  full CLI scores them and requires review until a labeled evaluation calibrates thresholds.
+- Name blocking adds candidates through two bounded keys. Date blocking adds candidates through
+  a bounded valid-date key after removing existing pairs. Exact decisions remain unchanged; the
+  full CLI scores additional pairs and requires review until labeled calibration is complete.
 
 ## Report privacy boundary
 

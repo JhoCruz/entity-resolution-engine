@@ -10,6 +10,7 @@ import typer
 from entity_resolution_engine import __version__
 from entity_resolution_engine.blocking import NameBlockingLimitError, generate_name_candidates
 from entity_resolution_engine.config import ConfigurationError, load_config
+from entity_resolution_engine.date_blocking import DateBlockingLimitError
 from entity_resolution_engine.decision import DecisionPolicy, MatchDecision
 from entity_resolution_engine.exact_baseline import (
     CandidateLimitError,
@@ -275,7 +276,7 @@ def reconcile_job(
     except SourceValidationError as error:
         typer.echo(f"Validation error: {error}", err=True)
         raise typer.Exit(code=4) from error
-    except (CandidateLimitError, NameBlockingLimitError) as error:
+    except (CandidateLimitError, NameBlockingLimitError, DateBlockingLimitError) as error:
         typer.echo(f"Candidate limit: {error}", err=True)
         raise typer.Exit(code=5) from error
     except ReportError as error:
@@ -287,6 +288,6 @@ def reconcile_job(
     typer.echo(f"Reconciliation complete: {saved}")
     typer.echo(f"Selected pairs: {len(result.exact.pairs) + len(result.scored)}")
     typer.echo(f"Matches: {matches} | reviews: {reviews}")
-    typer.echo("Name candidates require review until scores are calibrated on labeled data.")
+    typer.echo("Name and date candidates require review until scores are calibrated.")
     typer.echo("Pairs not selected remain unresolved; see summary.json for counts.")
     typer.echo("Full audit saved locally." if full_audit else "Reduced report saved locally.")

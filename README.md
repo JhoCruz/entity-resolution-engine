@@ -5,10 +5,10 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 Auditable entity resolution for messy CSV and Excel data, with deterministic exact matches,
-bounded name candidates, weighted similarity, and separate local report views.
+bounded name and date candidates, weighted similarity, and separate local report views.
 
 > **Project status:** a local `reconcile` command and opt-in full audit are available in development.
-> Name similarities always require review until thresholds have been tested on labeled data.
+> Name and date candidates always require review until thresholds have been tested on labeled data.
 > Baseline accuracy has been measured only on invented records; scale has not been measured yet.
 
 ## The problem
@@ -46,9 +46,10 @@ record identifiers without exposing their values. Normalization now produces aud
 keys for text, names, identifiers, phones, dates, and e-mails. Unsupported or ambiguous structured
 values carry an issue and no comparison key.
 The exact baseline finds candidates through normalized identifiers and produces `match` or
-`review` with field evidence and stable reasons. Two name-based keys find additional pairs, which
-receive weighted field similarities and a `review` outcome. A similarity score is not the
-probability that a pair is correct. Pairs never compared remain unresolved.
+`review` with field evidence and stable reasons. Two name-based keys and a fallback exact-date
+key find additional pairs, which receive weighted field similarities and a `review` outcome.
+A similarity score is not the probability that a pair is correct. Pairs never compared remain
+unresolved.
 
 ## Quick start
 
@@ -156,8 +157,9 @@ The baseline transformation contract is documented in
 [`docs/NORMALIZATION.md`](docs/NORMALIZATION.md).
 The first decision rules are documented in
 [`docs/EXACT_BASELINE.md`](docs/EXACT_BASELINE.md).
-The two name candidate keys and their limits are documented in
-[`docs/NAME_BLOCKING.md`](docs/NAME_BLOCKING.md).
+Name and date candidate keys and their limits are documented in
+[`docs/NAME_BLOCKING.md`](docs/NAME_BLOCKING.md) and
+[`docs/DATE_BLOCKING.md`](docs/DATE_BLOCKING.md).
 
 ## Data and privacy
 

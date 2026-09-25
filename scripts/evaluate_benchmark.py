@@ -37,7 +37,7 @@ def benchmark(*, size: int = 80) -> dict[str, object]:
     return {
         "benchmark": "synthetic_brazilian_style_v1",
         "size_per_split": size,
-        "method": "exact decisions plus review-only weighted name candidates",
+        "method": "exact decisions plus review-only weighted name and date candidates",
         "thresholds_applied_to_name_scores": False,
         "splits": splits,
     }

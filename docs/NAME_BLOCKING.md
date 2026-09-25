@@ -24,8 +24,9 @@ Organization names mapped as generic
 These keys are **pointers for comparison**, not evidence that two rows describe the same person.
 The `reconcile` command scores selected name pairs and sends them to review; it excludes rows
 already safely matched by the exact baseline. Common names can group unrelated people, and two
-changed edge tokens can hide a true match. No recall, precision, or false-positive rate is
-claimed until the labeled synthetic benchmark and evaluation stage.
+changed edge tokens can hide a true match. Their measured recall on one fixed synthetic
+benchmark is documented in [`EVALUATION.md`](EVALUATION.md); it is not a real-world guarantee.
+The `reconcile` command adds an exact-date fallback after this name stage.
 
 ## Bounded work
 
@@ -46,4 +47,4 @@ The fixed-seed example contains two name variations whose identifiers no longer 
 source. Its expected summary is zero exact-ID pairs and two new name candidates, one from each
 strategy. Run `scripts/generate_example_data.py` to regenerate the sources. `reconcile` scores
 these two pairs, reports conflicting identifiers, and keeps both in review. Threshold calibration
-and benchmark evaluation belong to later milestones; see [`REPORTS.md`](REPORTS.md).
+remains pending; see [`REPORTS.md`](REPORTS.md) and [`DATE_BLOCKING.md`](DATE_BLOCKING.md).
