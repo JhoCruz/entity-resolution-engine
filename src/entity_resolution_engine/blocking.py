@@ -116,19 +116,22 @@ def generate_name_candidates(
             left_groups = _groups(left, left_field, strategy)
             right_groups = _groups(right, right_field, strategy)
             for key, left_indexes in left_groups.items():
-                right_indexes = right_groups.get(key, ())
-                if len(left_indexes) * len(right_indexes) > MAX_PAIRS_PER_NAME_KEY:
+                active_left = [
+                    index for index in left_indexes if left_rows[index] not in excluded_left_rows
+                ]
+                active_right = [
+                    index
+                    for index in right_groups.get(key, ())
+                    if right_rows[index] not in excluded_right_rows
+                ]
+                if len(active_left) * len(active_right) > MAX_PAIRS_PER_NAME_KEY:
                     raise NameBlockingLimitError(
                         f"Name field '{left_field.name}' with strategy '{strategy.value}' "
                         f"generates more than {MAX_PAIRS_PER_NAME_KEY} pairs from one key."
                     )
-                for left_index in left_indexes:
-                    for right_index in right_indexes:
-                        if (
-                            (left_rows[left_index], right_rows[right_index]) in excluded_source_rows
-                            or left_rows[left_index] in excluded_left_rows
-                            or right_rows[right_index] in excluded_right_rows
-                        ):
+                for left_index in active_left:
+                    for right_index in active_right:
+                        if (left_rows[left_index], right_rows[right_index]) in excluded_source_rows:
                             continue
                         candidates[left_index, right_index].add(
                             NameBlockOrigin(left_field.name, strategy)

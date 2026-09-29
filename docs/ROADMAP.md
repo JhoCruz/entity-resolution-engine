@@ -77,7 +77,8 @@ acceptance criteria pass locally and in CI.
   full view out of logs and repository artifacts. Do not label the reduced view legally anonymous
   without assessing whether records can be re-identified in its intended context.
 - [x] Build and test the container image in CI (including its entry point).
-- [ ] Tag `v1.0.0` only after every documented command is reproducible.
+- [x] Tag [`v1.0.0`](https://github.com/JhoCruz/entity-resolution-engine/releases/tag/v1.0.0)
+  after every documented command is reproducible.
 
 ## Deferred work
 
