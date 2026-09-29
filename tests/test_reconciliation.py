@@ -141,6 +141,21 @@ def test_exact_matches_are_not_reintroduced_as_fuzzy_candidates(tmp_path: Path) 
     )
 
 
+def test_common_name_limit_ignores_rows_already_matched_by_identifier(tmp_path: Path) -> None:
+    rows = [f"{index},Synthetic Alpha,SYN-{index},2000-01-01" for index in range(33)]
+    left = "row_id,name,id,date\n" + "\n".join(f"L-{row}" for row in rows) + "\n"
+    right = "row_id,name,id,date\n" + "\n".join(f"R-{row}" for row in rows) + "\n"
+    path = _job(tmp_path, left, right)
+    output = tmp_path / "result"
+
+    response = runner.invoke(app, ["reconcile", "--config", str(path), "--output", str(output)])
+
+    assert response.exit_code == 0, response.output
+    summary = json.loads((output / "summary.json").read_text(encoding="utf-8"))
+    assert summary["matches"] == summary["selected_pairs"] == 33
+    assert summary["name_candidates"] == summary["date_candidates"] == 0
+
+
 def test_conflicting_exact_candidate_requires_review_in_conflicts_report(tmp_path: Path) -> None:
     path = _job(
         tmp_path,

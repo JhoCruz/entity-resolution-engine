@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "entity-resolution-engine"
-version = "1.0.0"
+version = "1.0.1"
 description = "Auditable entity resolution for messy tabular data"
 readme = "README.md"
 requires-python = ">=3.12"
