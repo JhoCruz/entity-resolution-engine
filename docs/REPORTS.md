@@ -57,6 +57,8 @@ fields side by side with original and normalized values, transformation steps, n
 issues, original source row numbers, and record identifiers. `full/audit.jsonl` adds those row
 numbers and identifiers to each pair decision. Use the shared `row_ref` to relate a pair in the
 reduced view to the corresponding normalized rows. Only the full view contains source values.
-Generated files use owner-only permissions on systems that support them. Do not commit or share
-the full view if it contains real personal data; store it in a directory with suitable access
-controls. This tool does not determine whether a real-world workflow complies with privacy law.
+On POSIX systems, generated files use mode `0600` and the `full/` directory uses mode `0700`.
+On Windows, file access follows the inherited permissions of the chosen output location; Unix
+permission bits do not describe its access control. Choose a private parent directory before
+running a full audit. Do not commit or share the full view if it contains real personal data.
+This tool does not determine whether a real-world workflow complies with privacy law.

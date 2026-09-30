@@ -19,7 +19,8 @@ uv run entity-resolution-engine reconcile --config examples/name-variants-job.to
 
 Each `--output` path must be new. To repeat a command, choose a different path, such as
 `reports/first-demo-2`. The input examples are included in the repository; no spreadsheet
-editing or credentials are required.
+editing or credentials are required. The commands above also work in Windows PowerShell when
+`uv` is on your PATH.
 
 ## What to expect
 
@@ -45,8 +46,7 @@ source names, identifiers, or original row numbers. If you explicitly need origi
 normalized values for this **synthetic** example, run a third command with a new path:
 
 ```bash
-uv run entity-resolution-engine reconcile --config examples/name-variants-job.toml \
-  --output reports/variants-full-demo --full-audit
+uv run entity-resolution-engine reconcile --config examples/name-variants-job.toml --output reports/variants-full-demo --full-audit
 ```
 
 Look in `reports/variants-full-demo/full/` for the original and normalized rows and the

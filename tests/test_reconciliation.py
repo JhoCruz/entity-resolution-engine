@@ -1,6 +1,7 @@
 """End-to-end tests for saved reconciliation decisions and local privacy views."""
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -114,8 +115,9 @@ def test_full_audit_links_original_and_normalized_rows_only_when_requested(
     assert right[0]["row_ref"] == review[0]["right_ref"]
     assert audit[0]["left_record_id"] == "A-001"
     assert _jsonl(second / "reviews.jsonl")[0]["left_ref"] != review[0]["left_ref"]
-    assert (first / "full" / "audit.jsonl").stat().st_mode & 0o777 == 0o600
-    assert (first / "full").stat().st_mode & 0o777 == 0o700
+    if os.name != "nt":
+        assert (first / "full" / "audit.jsonl").stat().st_mode & 0o777 == 0o600
+        assert (first / "full").stat().st_mode & 0o777 == 0o700
 
 
 def test_exact_matches_are_not_reintroduced_as_fuzzy_candidates(tmp_path: Path) -> None:
