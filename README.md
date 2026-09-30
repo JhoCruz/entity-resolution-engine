@@ -91,9 +91,10 @@ uv run entity-resolution-engine reconcile --config examples/name-variants-job.to
 ```
 
 This additionally writes `full/normalized_left.jsonl`, `full/normalized_right.jsonl`, and
-`full/audit.jsonl` under the new output directory. The audit files and directory are readable
-only by the current user where supported. Treat the full view as personal data if you run the
-tool on real people. The sample data in this repository is synthetic. See
+`full/audit.jsonl` under the new output directory. On POSIX systems, these files use owner-only
+permissions. On Windows, access follows the parent directory's permissions, so choose a private
+location. Treat the full view as personal data if you run the tool on real people. The sample
+data in this repository is synthetic. See
 [`docs/REPORTS.md`](docs/REPORTS.md) for the report format and limitations.
 
 Reproduce baseline evaluation on labeled synthetic sources with:

@@ -101,3 +101,37 @@ jobs:
 
       - name: Verify container release version
         run: test "$(docker run --rm entity-resolution-engine:ci --version)" = "1.0.1"
+
+  windows:
+    name: Windows CLI and tests
+    runs-on: windows-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      - name: Install Python and dependencies
+        run: uv sync --locked --extra dev
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Exercise first demo
+        run: |
+          uv run entity-resolution-engine reconcile --config examples/basic-job.toml --output reports/first-demo
+          uv run entity-resolution-engine reconcile --config examples/name-variants-job.toml --output reports/variants-demo
+          @'
+          import json
+          from pathlib import Path
+
+          expected = {"first-demo": (4, 0), "variants-demo": (0, 2)}
+          for name, counts in expected.items():
+              summary = json.loads((Path("reports") / name / "summary.json").read_text())
+              assert (summary["matches"], summary["reviews"]) == counts
+          '@ | uv run python -
