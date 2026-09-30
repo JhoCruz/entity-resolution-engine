@@ -13,8 +13,8 @@ bounded name and date candidates, weighted similarity, and separate local report
 > demonstrates calibrated decisions; it is not validated for real-world records.
 > Baseline accuracy and small-scale performance have been measured only on invented records.
 
-Start with the [v1.0 release guide](docs/RELEASE_1_0.md) for runnable examples, evidence, and
-limits.
+Start with the [five-minute demo](docs/FIRST_DEMO.md) to see the two example outcomes. The
+[v1.0 release guide](docs/RELEASE_1_0.md) covers evidence and limits.
 
 ## The problem
 
@@ -30,7 +30,7 @@ Exact joins miss these relationships. Unrestricted fuzzy matching is expensive a
 confident-looking false positives. This project aims to produce decisions that are both useful
 and inspectable, including an explicit **review** outcome when evidence is insufficient.
 
-## Planned pipeline
+## How it works
 
 ```mermaid
 flowchart LR
@@ -44,17 +44,14 @@ flowchart LR
     F --> I[No match]
 ```
 
-The initial implementation includes the typed decision policy that separates automatic matches
-from records requiring human review, validated TOML contracts, CSV/XLSX loaders that preserve
-source values and row provenance, and source validation that blocks missing columns or invalid
-record identifiers without exposing their values. Normalization now produces auditable comparison
-keys for text, names, identifiers, phones, dates, and e-mails. Unsupported or ambiguous structured
-values carry an issue and no comparison key.
-The exact baseline finds candidates through normalized identifiers and produces `match` or
-`review` with field evidence and stable reasons. Two name-based keys and a fallback exact-date
-key find additional pairs, which receive weighted field similarities and a `review` outcome.
-A similarity score is not the probability that a pair is correct. Pairs never compared remain
-unresolved.
+The CLI validates mapped CSV/XLSX sources and retains source values and row provenance for an
+optional local audit. Normalization creates comparison keys for text, names, identifiers, phones,
+dates, and e-mails; unsupported or ambiguous structured values have no comparison key. Exact
+identifier candidates can become `match` only with independent support and no conflict. Bounded
+name and date candidate stages find additional pairs, with weighted field evidence. They remain
+in `review` by default; a separately selected policy demonstrates thresholds tuned only on
+synthetic records. A similarity score is not the probability that a pair is correct. Pairs never
+selected for comparison remain unresolved.
 
 ## Quick start
 
