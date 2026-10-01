@@ -210,12 +210,15 @@ def candidates_job(
             config, validated_left, validated_right
         )
         exact = resolve_exact_identifiers(config, normalized_left, normalized_right)
+        matches = tuple(pair for pair in exact.pairs if pair.decision is MatchDecision.MATCH)
         names = generate_name_candidates(
             normalized_left,
             normalized_right,
             excluded_source_rows=frozenset(
                 (pair.left_source_row, pair.right_source_row) for pair in exact.pairs
             ),
+            excluded_left_rows=frozenset(pair.left_source_row for pair in matches),
+            excluded_right_rows=frozenset(pair.right_source_row for pair in matches),
         )
     except ConfigurationError as error:
         typer.echo(f"Configuration error: {error}", err=True)

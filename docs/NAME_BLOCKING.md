@@ -22,9 +22,11 @@ Organization names mapped as generic
 `text` do not participate in this first name-based stage.
 
 These keys are **pointers for comparison**, not evidence that two rows describe the same person.
-The `reconcile` command scores selected name pairs and sends them to review; it excludes rows
-already safely matched by the exact baseline. Common names can group unrelated people, and two
-changed edge tokens can hide a true match. Their measured recall on one fixed synthetic
+Both `candidates` and `reconcile` exclude rows already safely matched by the exact baseline before
+checking the common-name pair limit. Exact-ID pairs that require review do not remove their rows
+from later candidate search. The `reconcile` command scores selected name pairs and sends them to
+review. Common names can group unrelated people, and two changed edge tokens can hide a true
+match. Their measured recall on one fixed synthetic
 benchmark is documented in [`EVALUATION.md`](EVALUATION.md); it is not a real-world guarantee.
 The `reconcile` command adds an exact-date fallback after this name stage.
 
