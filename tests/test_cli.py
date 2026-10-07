@@ -211,6 +211,48 @@ def _write_baseline_config(tmp_path: Path) -> Path:
     return path
 
 
+def test_candidates_skip_exact_matches_before_common_name_limit(tmp_path: Path) -> None:
+    count = 33
+    left_rows = [f"L-{index},Synthetic Alpha,SYN-{index}" for index in range(count)]
+    right_rows = [f"R-{index},Synthetic Alpha,SYN-{index}" for index in range(count)]
+    (tmp_path / "left.csv").write_text(
+        "left_id,name,identity\n" + "\n".join(left_rows) + "\n", encoding="utf-8"
+    )
+    (tmp_path / "right.csv").write_text(
+        "right_id,name,identity\n" + "\n".join(right_rows) + "\n", encoding="utf-8"
+    )
+    config_path = _write_baseline_config(tmp_path)
+
+    result = runner.invoke(app, ["candidates", "--config", str(config_path)])
+
+    assert result.exit_code == 0, result.output
+    assert "Exact-ID candidates: 33 | new name candidates: 0" in result.stdout
+    assert "Pairs not selected: 1056 of 1089" in result.stdout
+    assert "Synthetic Alpha" not in result.output
+
+
+def test_candidates_keep_exact_review_rows_available_for_name_blocking(tmp_path: Path) -> None:
+    (tmp_path / "left.csv").write_text(
+        "left_id,name,identity\nL-1,Synthetic Alpha,SYN-1\n", encoding="utf-8"
+    )
+    (tmp_path / "right.csv").write_text(
+        "right_id,name,identity\nR-1,Synthetic Beta,SYN-1\nR-2,Synthetic Alpha,SYN-2\n",
+        encoding="utf-8",
+    )
+    config_path = _write_baseline_config(tmp_path)
+
+    baseline = runner.invoke(app, ["baseline", "--config", str(config_path)])
+    result = runner.invoke(app, ["candidates", "--config", str(config_path)])
+
+    assert baseline.exit_code == 0, baseline.output
+    assert "Candidate pairs: 1 | match: 0 | review: 1" in baseline.stdout
+    assert result.exit_code == 0, result.output
+    assert "Exact-ID candidates: 1 | new name candidates: 1" in result.stdout
+    assert "Pairs not selected: 0 of 2" in result.stdout
+    assert "Synthetic Alpha" not in result.output
+    assert "SYN-1" not in result.output
+
+
 def test_baseline_rejects_nul_that_would_create_a_false_exact_match(tmp_path: Path) -> None:
     (tmp_path / "left.csv").write_text(
         "left_id,identity,name\nL-1,SYN-1\x00TAIL,Synthetic Alpha\n",
