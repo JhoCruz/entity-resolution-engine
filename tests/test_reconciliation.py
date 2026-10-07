@@ -2,6 +2,7 @@
 
 import json
 import os
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -211,6 +212,55 @@ def test_reconcile_refuses_to_replace_an_existing_report(tmp_path: Path) -> None
     assert response.exit_code == 6
     assert "already exists" in response.output
     assert (output / "matches.jsonl").read_bytes() == before
+
+
+@pytest.mark.parametrize("weight", [1e308, 5e-324], ids=["large", "subnormal"])
+def test_weight_scale_preserves_scores_and_auditable_reports(tmp_path: Path, weight: float) -> None:
+    original = load_config("examples/name-variants-job.toml")
+    reference_config = replace(
+        original,
+        field_mappings=tuple(replace(field, weight=1.0) for field in original.field_mappings),
+    )
+    scaled_config = replace(
+        original,
+        field_mappings=tuple(replace(field, weight=weight) for field in original.field_mappings),
+    )
+    reference = reconcile(reference_config)
+
+    scaled = reconcile(scaled_config)
+
+    assert [pair.score for pair in scaled.scored] == pytest.approx(
+        [pair.score for pair in reference.scored]
+    )
+    output = write_reports(scaled_config, scaled, tmp_path / "scaled")
+    reviews = _jsonl(output / "reviews.jsonl")
+    assert [row["score"] for row in reviews] == pytest.approx(
+        [pair.score for pair in reference.scored]
+    )
+    assert all([field["weight"] for field in row["evidence"]] == [weight] * 3 for row in reviews)
+
+
+def test_unusable_fields_do_not_drown_out_a_tiny_comparable_weight(tmp_path: Path) -> None:
+    path = _job(
+        tmp_path,
+        "row_id,name,id,date\nL-1,Synthetic Alpha,,bad-date\n",
+        "row_id,name,id,date\nR-1,Synthetic Alphax,,2000-01-01\n",
+    )
+    original = load_config(path)
+    config = replace(
+        original,
+        field_mappings=tuple(
+            replace(field, weight=5e-324 if field.name == "name" else 1e308)
+            for field in original.field_mappings
+        ),
+    )
+
+    pair = reconcile(config).scored[0]
+
+    assert pair.score == pytest.approx(pair.evidence[0].field.score)
+    assert pair.score is not None and 0 < pair.score < 1
+    assert [item.field.score for item in pair.evidence[1:]] == [None, None]
+    assert pair.decision is MatchDecision.REVIEW
 
 
 def test_date_candidate_recovers_both_changed_name_anchors_for_review(tmp_path: Path) -> None:

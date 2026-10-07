@@ -33,6 +33,8 @@ Each job has a `left` and `right` source.
 
 The configured extension must agree with `file_type`. File existence and source columns are
 checked by the ingestion layer. CSV options are rejected on XLSX sources.
+The encoding must support decoding bytes into text; binary transforms such as Base64 and
+text transforms such as ROT13 are rejected during configuration validation.
 
 ## Ingestion behavior
 
@@ -49,6 +51,8 @@ characters, corrupt workbooks, and missing worksheets produce errors that includ
 and relevant context. NUL characters are rejected before pandas parses CSV because they can
 silently truncate a cell and create a false identifier match; the check uses decoded text so
 ordinary UTF-16 files remain valid.
+UTF-16 and UTF-32 streams without the byte-order mark required by their configured decoder
+produce an ingestion error with the source path and encoding, without exposing cell values.
 
 ## Source validation behavior
 
@@ -79,6 +83,11 @@ columns.
 
 Logical names and source columns must be unique within their respective sides. A source's
 `record_id` cannot also be a matching field because it identifies rows for audit and reporting.
+
+Weights must be finite and positive; they do not need to sum to one. Scoring rescales the
+weights of comparable fields internally to handle very large or very small values. Missing
+and invalid fields are excluded from the weighted average. Reports retain the original
+configured weights alongside each field's score for auditing.
 
 ## Thresholds
 

@@ -67,7 +67,7 @@ def _read_csv(source: SourceConfig) -> pd.DataFrame:
             keep_default_na=False,
             na_filter=False,
         )
-    except UnicodeDecodeError as error:
+    except UnicodeError as error:
         raise _error(
             source,
             f"CSV bytes cannot be decoded with encoding '{source.encoding}'.",

@@ -139,9 +139,12 @@ def score_candidates(
             )
         )
         comparable = tuple(item for item in evidence if item.field.score is not None)
-        total_weight = sum(item.weight for item in comparable)
+        # Rescale only usable evidence to avoid overflow and subnormal products.
+        weight_scale = max((item.weight for item in comparable), default=1.0)
+        total_weight = sum(item.weight / weight_scale for item in comparable)
         score = (
-            sum(item.weight * cast(float, item.field.score) for item in comparable) / total_weight
+            sum((item.weight / weight_scale) * cast(float, item.field.score) for item in comparable)
+            / total_weight
             if total_weight
             else None
         )

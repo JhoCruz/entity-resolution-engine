@@ -181,13 +181,16 @@ def test_source_rejects_invalid_csv_delimiter(delimiter: str) -> None:
         )
 
 
-def test_source_rejects_unknown_text_encoding() -> None:
-    with pytest.raises(ConfigurationError, match="Unknown text encoding"):
+@pytest.mark.parametrize(
+    "encoding", ["not-a-real-encoding", "base64_codec", "hex_codec", "rot_13", "undefined"]
+)
+def test_source_rejects_unsupported_text_encoding(encoding: str) -> None:
+    with pytest.raises(ConfigurationError, match="text encoding"):
         SourceConfig(
             path=Path("customers.csv"),
             file_type=FileType.CSV,
             record_id="row_id",
-            encoding="not-a-real-encoding",
+            encoding=encoding,
         )
 
 
