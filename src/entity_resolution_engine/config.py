@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import codecs
+import io
 import math
 import re
 import tomllib
@@ -79,9 +79,13 @@ class SourceConfig:
             raise ConfigurationError("delimiter must be exactly one non-newline character.")
         _validate_exact_text(self.encoding, "encoding")
         try:
-            codecs.lookup(self.encoding)
-        except LookupError as error:
-            raise ConfigurationError(f"Unknown text encoding '{self.encoding}'.") from error
+            # Validate through the same text-stream interface used to read CSV files.
+            with io.TextIOWrapper(io.BytesIO(), encoding=self.encoding) as stream:
+                stream.read()
+        except (LookupError, UnicodeError) as error:
+            raise ConfigurationError(
+                f"Unknown or unsupported text encoding '{self.encoding}'."
+            ) from error
         if self.file_type is FileType.XLSX and (self.delimiter != "," or self.encoding != "utf-8"):
             raise ConfigurationError("delimiter and encoding can only be customized for csv.")
 

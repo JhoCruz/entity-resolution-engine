@@ -144,6 +144,31 @@ def test_inspect_reports_configuration_error(tmp_path: Path) -> None:
     assert "Configuration error:" in result.output
 
 
+@pytest.mark.parametrize(
+    ("encoding", "exit_code", "message"),
+    [("base64_codec", 2, "Configuration error:"), ("utf-16", 3, "Ingestion error:")],
+)
+def test_inspect_reports_encoding_problems_without_a_traceback(
+    tmp_path: Path, encoding: str, exit_code: int, message: str
+) -> None:
+    (tmp_path / "left.csv").write_bytes("left_id,name\nL-001,Synthetic Left\n".encode("utf-16-le"))
+    config_path = _write_inspection_config(tmp_path, tmp_path / "right.csv")
+    config_path.write_text(
+        config_path.read_text(encoding="utf-8").replace(
+            'record_id = "left_id"', f'record_id = "left_id"\nencoding = "{encoding}"'
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["inspect", "--config", str(config_path)])
+
+    assert result.exit_code == exit_code
+    assert message in result.output
+    assert encoding in result.output
+    assert "Traceback" not in result.output
+    assert "L-001" not in result.output
+
+
 def test_baseline_resolves_documented_csv_xlsx_without_revealing_values() -> None:
     result = runner.invoke(app, ["baseline", "--config", "examples/basic-job.toml"])
 

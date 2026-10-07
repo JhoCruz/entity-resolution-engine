@@ -231,6 +231,18 @@ def test_load_source_reports_csv_encoding_error(tmp_path: Path) -> None:
         load_source(_source(path))
 
 
+@pytest.mark.parametrize("encoding", ["utf-16", "utf-32"])
+def test_load_source_reports_missing_byte_order_mark(tmp_path: Path, encoding: str) -> None:
+    path = tmp_path / "missing-bom.csv"
+    path.write_bytes("row_id,name\nSYN-1,Synthetic Alpha\n".encode(f"{encoding}-le"))
+
+    with pytest.raises(IngestionError, match=f"encoding '{encoding}'") as error:
+        load_source(_source(path, encoding=encoding))
+
+    assert "missing-bom.csv" in str(error.value)
+    assert "SYN-1" not in str(error.value)
+
+
 @pytest.mark.parametrize("encoding", ["utf-8", "utf-16"])
 def test_load_source_rejects_embedded_nul_before_it_changes_an_identifier(
     tmp_path: Path, encoding: str
