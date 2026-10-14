@@ -301,6 +301,18 @@ def test_load_config_reports_invalid_toml(tmp_path: Path) -> None:
         load_config(_write_config(tmp_path, "not = [valid"))
 
 
+@pytest.mark.parametrize("encoding", ["utf-16", "latin-1"])
+def test_load_config_reports_non_utf8_configuration(tmp_path: Path, encoding: str) -> None:
+    path = tmp_path / "job.toml"
+    path.write_bytes((VALID_CONFIG + "\n# Synthetic caf\u00e9\n").encode(encoding))
+
+    with pytest.raises(ConfigurationError, match="UTF-8") as error:
+        load_config(path)
+
+    assert "job.toml" in str(error.value)
+    assert "Synthetic" not in str(error.value)
+
+
 @pytest.mark.parametrize(
     ("content", "message"),
     [

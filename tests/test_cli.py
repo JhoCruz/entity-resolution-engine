@@ -54,6 +54,26 @@ def test_check_config_reports_actionable_error(tmp_path: Path) -> None:
     assert "configuration.sources must be a table" in result.output
 
 
+@pytest.mark.parametrize("command", ["check-config", "reconcile"])
+def test_cli_reports_non_utf8_configuration(tmp_path: Path, command: str) -> None:
+    config_path = tmp_path / "job.toml"
+    config_path.write_bytes("schema_version = 1\n".encode("utf-16"))
+    output = tmp_path / "reports"
+    arguments = (
+        [command, str(config_path)]
+        if command == "check-config"
+        else [command, "--config", str(config_path), "--output", str(output)]
+    )
+
+    result = runner.invoke(app, arguments)
+
+    assert result.exit_code == 2
+    assert "Configuration error:" in result.output
+    assert "UTF-8" in result.output
+    assert "job.toml" in result.output
+    assert not output.exists()
+
+
 def test_inspect_reports_valid_sources_without_record_values() -> None:
     result = runner.invoke(app, ["inspect", "--config", "examples/basic-job.toml"])
 

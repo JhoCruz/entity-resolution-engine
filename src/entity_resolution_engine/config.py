@@ -320,6 +320,10 @@ def load_config(path: str | Path) -> EngineConfig:
     try:
         with config_path.open("rb") as handle:
             root = cast(Table, tomllib.load(handle))
+    except UnicodeDecodeError as error:
+        raise ConfigurationError(
+            f"Cannot read configuration '{config_path}': save the TOML file as UTF-8."
+        ) from error
     except tomllib.TOMLDecodeError as error:
         raise ConfigurationError(f"Invalid TOML in '{config_path}': {error}") from error
     except OSError as error:

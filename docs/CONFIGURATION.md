@@ -4,6 +4,10 @@ A TOML file describes the two sources in one resolution job. The configuration i
 before file ingestion begins, so spelling mistakes and ambiguous mappings fail with a precise
 location instead of producing a misleading match result later.
 
+Save the TOML configuration file as UTF-8. If its bytes cannot be decoded as UTF-8, the CLI
+reports a configuration error with the file path and exits with code 2. The CSV `encoding`
+option applies only to the source data, not to the TOML file itself.
+
 See [`examples/basic-job.toml`](../examples/basic-job.toml) for a complete synthetic example.
 
 Validate it from the command line:
