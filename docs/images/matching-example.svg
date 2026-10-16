@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="820" viewBox="0 0 1100 820" role="img" aria-labelledby="title desc">
+  <title id="title">Two synthetic pairs, two explainable decisions</title>
+  <desc id="desc">A-001 and B-001 have equal normalized identifiers, names, and birth dates, so the exact rule returns match. A-001 and V-001 have similar names but different identifiers; their weighted similarity is 0.6263 and the default policy returns review. All records are invented.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8" fill="none" stroke="#64748b" stroke-width="1.5"/>
+    </marker>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #172b42; }
+      .title { font-size: 30px; font-weight: 700; }
+      .subtitle { font-size: 17px; fill: #526579; }
+      .section { font-size: 20px; font-weight: 700; }
+      .label { font-size: 13px; font-weight: 700; letter-spacing: 1px; fill: #526579; }
+      .body { font-size: 17px; }
+      .value { font-size: 16px; font-family: Consolas, 'Courier New', monospace; }
+      .small { font-size: 15px; fill: #526579; }
+      .status { font-size: 26px; font-weight: 700; }
+      .flow { fill: none; stroke: #64748b; stroke-width: 2; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1100" height="820" fill="#f5f7fb"/>
+  <text x="32" y="48" class="title">Two pairs, two explainable decisions</text>
+  <text x="32" y="78" class="subtitle">Invented records from the committed examples · Default policy · No calibration selected</text>
+
+  <rect x="24" y="108" width="1052" height="282" rx="16" fill="#ffffff" stroke="#d8e1eb"/>
+  <text x="44" y="145" class="section">01 / Exact identifier with supporting evidence</text>
+  <text x="44" y="178" class="label">ORIGINAL INPUTS</text>
+  <text x="44" y="212" class="body" font-weight="700">A-001 · CSV</text>
+  <text x="240" y="212" class="body" font-weight="700">B-001 · Excel</text>
+  <text x="44" y="243" class="value">Ana Souza</text>
+  <text x="240" y="243" class="value">ANA SOUZA</text>
+  <text x="44" y="274" class="value">SYN-559444-1</text>
+  <text x="240" y="274" class="value">SYN5594441</text>
+  <text x="44" y="305" class="value">1995-06-08</text>
+  <text x="240" y="305" class="value">1995-06-08</text>
+  <text x="44" y="351" class="small">Original values remain available in the full audit.</text>
+
+  <path d="M425,264 H457" class="flow"/>
+  <text x="480" y="178" class="label">AFTER NORMALIZATION</text>
+  <text x="480" y="223" class="body">Name: equal</text>
+  <text x="480" y="256" class="body">Identifier: equal and unique</text>
+  <text x="480" y="289" class="body">Birth date: equal</text>
+  <text x="480" y="335" class="small">Each field score: 1.0</text>
+  <text x="480" y="357" class="small">Exact rule; overall score: null</text>
+  <path d="M776,264 H808" class="flow"/>
+
+  <rect x="830" y="192" width="222" height="166" rx="12" fill="#e9f6ef" stroke="#b6ddc5"/>
+  <text x="850" y="229" class="status" style="fill:#17633f">MATCH</text>
+  <text x="850" y="263" class="small" style="fill:#17633f">exact_identifier</text>
+  <text x="850" y="288" class="small" style="fill:#17633f">supporting_field</text>
+  <text x="850" y="330" class="body">Accepted by the rule</text>
+
+  <rect x="24" y="410" width="1052" height="304" rx="16" fill="#ffffff" stroke="#d8e1eb"/>
+  <text x="44" y="447" class="section">02 / Similar name, different identifier</text>
+  <text x="44" y="480" class="label">ORIGINAL INPUTS</text>
+  <text x="44" y="514" class="body" font-weight="700">A-001 · CSV</text>
+  <text x="240" y="514" class="body" font-weight="700">V-001 · CSV</text>
+  <text x="44" y="545" class="value">Ana Souza</text>
+  <text x="240" y="545" class="value">Ana Souzax</text>
+  <text x="44" y="576" class="value">SYN-559444-1</text>
+  <text x="240" y="576" class="value">SYN-UNLINKED-01</text>
+  <text x="44" y="607" class="value">1995-06-08</text>
+  <text x="240" y="607" class="value">1995-06-08</text>
+  <text x="44" y="654" class="small">Name anchor: first token + last initial</text>
+  <text x="44" y="677" class="small">Both normalized names share “ana” + “s”.</text>
+
+  <path d="M425,566 H457" class="flow"/>
+  <text x="480" y="480" class="label">FIELD SCORE × WEIGHT</text>
+  <text x="480" y="525" class="body">Name: 0.9474 × 0.45</text>
+  <text x="480" y="558" class="body">Identifier: 0 × 0.35</text>
+  <text x="480" y="591" class="body">Birth date: 1 × 0.20</text>
+  <text x="480" y="637" class="small">Weighted similarity: 0.6263</text>
+  <text x="480" y="661" class="small">Rounded for this illustration</text>
+  <path d="M776,566 H808" class="flow"/>
+
+  <rect x="830" y="494" width="222" height="188" rx="12" fill="#fff4df" stroke="#ecd19b"/>
+  <text x="850" y="531" class="status" style="fill:#805614">REVIEW</text>
+  <text x="850" y="565" class="small" style="fill:#805614">uncalibrated_score</text>
+  <text x="850" y="590" class="small" style="fill:#805614">identifier_conflict</text>
+  <text x="850" y="632" class="body">Decision left open</text>
+  <text x="850" y="658" class="small">No automatic match</text>
+
+  <text x="32" y="754" class="body" font-weight="700">A similarity score is not a probability of identity.</text>
+  <text x="32" y="783" class="subtitle">Approximate candidates stay in review by default. Unselected pairs remain unresolved.</text>
+</svg>

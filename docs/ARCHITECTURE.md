@@ -3,7 +3,7 @@
 ## Goal
 
 Resolve records that refer to the same entity while making uncertainty, evidence, and failure
-modes visible. The first stable release targets local CSV/XLSX workflows through a CLI.
+modes visible. The released application processes local CSV/XLSX files through a CLI.
 
 ## Processing stages
 
@@ -16,7 +16,7 @@ modes visible. The first stable release targets local CSV/XLSX workflows through
 7. **Reporting** records decisions, component scores, reasons, and provenance.
 8. **Evaluation** compares decisions with synthetic ground truth and measures quality and cost.
 
-## Planned package boundaries
+## Package responsibilities
 
 ```text
 entity_resolution_engine/
@@ -30,11 +30,13 @@ entity_resolution_engine/
 ├── blocking.py         # Candidate generation
 ├── date_blocking.py    # Bounded exact-date candidate fallback
 ├── scoring.py          # Pair-level evidence and confidence
+├── reconciliation.py   # Compose the exact, name, and date stages
+├── policy.py           # Optional synthetic thresholds and decision safeguards
+├── calibration.py      # Tune demonstration thresholds on labeled synthetic pairs
 ├── reporting.py        # Auditable output tables
-└── evaluation.py       # Accuracy and performance measurement
+├── evaluation.py       # Decision metrics against known labels
+└── benchmark.py        # Fixed-seed synthetic inputs and ground truth
 ```
-
-Modules are added only when their milestone begins. Empty architecture is documentation, not code.
 
 ## Data flow guarantees
 
