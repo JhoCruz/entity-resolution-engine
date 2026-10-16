@@ -10,14 +10,14 @@ through a command-line interface.
 
 ## Why this project
 
-An exact join works when both files share a reliable identifier. It becomes less useful when
-one file has missing identifiers, different formatting, or a name with a typo. Matching on a
-similar name alone creates another problem: two different people can look alike in the data.
+This project connects my experience checking data in spreadsheets to my interest in data
+analysis and data science. I wanted to explore a practical question: what evidence is
+enough to say that records in two different files describe the same person?
 
-This project explores that gap between an exact join and an unchecked fuzzy match. It starts
-with simple identifier rules, then uses name and date keys to select additional pairs for
-comparison. Each result includes field scores and reasons so a person can check what happened.
-The local CLI keeps the workflow small enough to run and inspect with two ordinary files.
+The workflow starts with simple identifier rules, then uses name and date keys to select
+additional pairs for comparison. Each result includes field scores and reasons so a person
+can check what happened. The local workflow also gives me a way to study the whole process,
+from the original files to a match or a case that needs review.
 
 One tradeoff matters throughout: limiting comparisons makes the workflow manageable, but can
 miss a true pair. Records that were never compared remain unresolved.
