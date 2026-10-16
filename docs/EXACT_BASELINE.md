@@ -20,7 +20,7 @@ Otherwise it becomes `review`, with stable reasons such as `identifier_collision
 Each `FieldEvidence` records its name and semantic type, outcome, exact component score (`1.0`
 for agreement, `0.0` for conflict, null for missing/invalid), and applicable normalization issues.
 No source field values are included in field evidence. Internal pair objects retain source row
-numbers and original record IDs for future audited reports; their representation hides those IDs.
+numbers and original record IDs for the opt-in full audit; their representation hides those IDs.
 
 This is a deterministic rule, so it does not claim a probabilistic confidence score. The
 configured `review` and `automatic_match` thresholds are reserved for the later scored stage.

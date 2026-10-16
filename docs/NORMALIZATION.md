@@ -90,5 +90,6 @@ matcher must never treat a null key as positive evidence.
 
 The baseline preserves diacritics. The structured-format rules deliberately accept a limited,
 documented syntax. Other conventions can be added only with explicit source configuration and
-tests demonstrating that distinct values will not collapse silently. No candidate generation or
-matching uses these keys yet; `inspect` currently ends after source validation.
+tests demonstrating that distinct values will not collapse silently. The `reconcile` command
+uses these keys for exact identifiers, name and date candidate selection, and field scoring.
+The `inspect` command stops after source validation and does not run normalization or matching.

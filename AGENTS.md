@@ -1,35 +1,11 @@
-# Repository working agreement
+# Repository guide
 
-## Purpose
+Maintain the local entity resolution CLI with focused changes, auditable decisions, and
+reproducible evaluation.
 
-Build a portfolio-quality entity resolution engine through small, explainable increments. The
-repository must demonstrate sound software and data engineering, not merely accumulate features.
+Follow [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, data-handling rules, scope,
+and the required checks before each commit.
 
-## Non-negotiable rules
-
-- Write code, identifiers, docstrings, commits, and repository documentation in English.
-- Use only synthetic data generated with a fixed seed. Never use employer data or real PII.
-- Do not mention internal employer systems, record layouts, or operating procedures.
-- Keep every automatic decision auditable: retain component scores, reasons, and thresholds.
-- Preserve an explicit review/abstention outcome for uncertain pairs.
-- Never publish a metric without a reproducible dataset, command, and output artifact.
-- Add or update tests with every behavioral change.
-- Explain the reason before adding a dependency or architectural layer.
-- Prefer a transparent baseline over an opaque model unless evaluation proves the benefit.
-- Keep commits small enough that their intent can be explained in a technical interview.
-
-## Quality gate
-
-Run before every commit:
-
-```bash
-uv run ruff check .
-uv run ruff format --check .
-uv run mypy src tests
-uv run pytest
-```
-
-## Scope control
-
-The first stable release is a local CLI. A web interface, cloud deployment, distributed compute,
-Kubernetes, and LLM-based matching are outside the initial scope.
+Preserve field evidence, reasons, and thresholds for automatic decisions. Uncertain pairs
+must retain a review outcome. Use only fixed-seed synthetic fixtures and add regression tests
+for behavioral changes.

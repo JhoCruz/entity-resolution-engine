@@ -16,8 +16,8 @@ prints counts and the output location; it never prints record values. `--full-au
 | File | Contents |
 | --- | --- |
 | `summary.json` | Counts of rows, possible and selected pairs, name and date candidates, decisions, conflicts, and rows without candidates. |
-| `matches.jsonl` | Automatically accepted exact-identifier pairs and their field evidence. |
-| `reviews.jsonl` | Ambiguous exact pairs and all currently scored name or date pairs. |
+| `matches.jsonl` | Accepted pairs and field evidence: exact-identifier pairs by default, plus eligible name pairs when the optional synthetic policy is applied. |
+| `reviews.jsonl` | Pairs still requiring review, including ambiguous exact pairs and all name or date candidates in the default mode. |
 | `non_matches.jsonl` | Explicitly rejected candidate pairs; empty in the default mode. |
 | `conflicts.jsonl` | A subset of reviews with conflicting fields, for triage. |
 

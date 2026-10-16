@@ -5,9 +5,10 @@
 
 ## Context
 
-The project must demonstrate data engineering, algorithmic reasoning, software quality, and honest
-evaluation within a portfolio-sized scope. Entity resolution is vulnerable to false confidence:
-an opaque similarity score can be operationally worse than an obvious non-match.
+The workflow needs to compare two tabular sources locally and retain the evidence behind each
+decision. Entity resolution is vulnerable to false confidence: a high similarity can hide
+conflicting identifiers or a common name shared by different people. A small, inspectable pipeline
+makes those cases easier to investigate and evaluate.
 
 ## Decision
 
