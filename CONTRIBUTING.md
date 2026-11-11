@@ -1,7 +1,8 @@
 # Contributing
 
 Keep each change focused on one problem so its behavior and test results can be reviewed
-together. Code, identifiers, docstrings, commit messages, and repository documentation use English.
+together. Code, identifiers, docstrings, and commit messages use English.
+English is the default for documentation, with a Portuguese translation of the README.
 
 ## Development setup
 
