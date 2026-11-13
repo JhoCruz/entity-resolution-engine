@@ -1,7 +1,5 @@
 # Entity Resolution Engine
 
-[Read in English](README.md)
-
 [![CI](https://github.com/JhoCruz/entity-resolution-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/JhoCruz/entity-resolution-engine/actions/workflows/ci.yml)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)](https://www.python.org/)
 [![Licença MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -9,6 +7,10 @@
 O Entity Resolution Engine cruza dois arquivos, em CSV ou Excel (`.xlsx`), para
 encontrar registros que podem pertencer à mesma pessoa. Ele roda localmente pelo
 terminal e gera relatórios com as evidências de cada decisão.
+
+[Read in English](README.md) · [Como rodar](#como-rodar) · [Dois casos da demonstração](#dois-casos-da-demonstração)
+
+[![Dois pares de registros fictícios ilustram um vínculo automático e um caso enviado para revisão](docs/images/matching-example.svg)](docs/images/matching-example.svg)
 
 ## Que problema o projeto resolve
 

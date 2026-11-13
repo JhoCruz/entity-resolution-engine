@@ -1,7 +1,5 @@
 # Entity Resolution Engine
 
-[Português (Brasil)](README.pt-BR.md)
-
 [![CI](https://github.com/JhoCruz/entity-resolution-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/JhoCruz/entity-resolution-engine/actions/workflows/ci.yml)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -9,6 +7,10 @@
 Compare CSV and Excel files to find records that may refer to the same person. The engine
 keeps the evidence behind each decision and sends uncertain pairs to review. It runs locally
 through a command-line interface.
+
+[Português (Brasil)](README.pt-BR.md) · [Run locally](#run-it) · [Worked example](docs/EXAMPLE_WALKTHROUGH.md)
+
+[![Two synthetic records traced from input to a match or review decision](docs/images/matching-example.svg)](docs/images/matching-example.svg)
 
 ## Why this project
 
@@ -26,11 +28,9 @@ miss a true pair. Records that were never compared remain unresolved.
 
 ## See the result
 
-The two cases below come from the invented records in `examples/data/`. One pair has matching
+The two illustrated cases come from the invented records in `examples/data/`. One pair has matching
 identifiers and supporting fields. The other has a similar name and the same date, but
 conflicting identifiers, so it needs review.
-
-![Two synthetic records traced from input to a match or review decision](docs/images/matching-example.svg)
 
 Follow the [worked example](docs/EXAMPLE_WALKTHROUGH.md) for the inputs, actual component scores,
 commands, and a record-by-record explanation. The [first demo](docs/FIRST_DEMO.md) covers the
